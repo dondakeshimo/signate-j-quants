@@ -2,6 +2,7 @@ from predictor import ScoringService
 
 dataset_dir = "./data"
 model_path = "./model"
+output_path = "."
 
 inputs = {
     "stock_list": f"{dataset_dir}/stock_list.csv.gz",
@@ -26,3 +27,6 @@ inputs = {
 ScoringService.get_model(model_path)
 ret = ScoringService.predict(inputs)
 print("\n".join(ret.split("\n")[:10]))
+
+with open(f"{output_path}/chapter06-tutorial-1.csv", mode="w") as f:
+    f.write(ret)
