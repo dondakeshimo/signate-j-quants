@@ -5,9 +5,10 @@ import pickle
 
 import numpy as np
 import pandas as pd
-from module import SentimentGenerator
 from scipy.stats import zscore
 from tqdm.auto import tqdm
+
+from module import SentimentGenerator
 
 
 class ScoringService(object):
@@ -42,13 +43,11 @@ class ScoringService(object):
             # DataFrameのindexを設定します。
             if k == "stock_price":
                 cls.dfs[k].loc[:, "datetime"] = pd.to_datetime(
-                    cls.dfs[k].loc[:, "EndOfDayQuote Date"]
-                )
+                    cls.dfs[k].loc[:, "EndOfDayQuote Date"])
                 cls.dfs[k].set_index("datetime", inplace=True)
             elif k in ["stock_fin", "stock_fin_price", "stock_labels"]:
                 cls.dfs[k].loc[:, "datetime"] = pd.to_datetime(
-                    cls.dfs[k].loc[:, "base_date"]
-                )
+                    cls.dfs[k].loc[:, "base_date"])
                 cls.dfs[k].set_index("datetime", inplace=True)
         return cls.dfs
 
@@ -62,13 +61,16 @@ class ScoringService(object):
         """
         stock_list = dfs["stock_list"].copy()
         # 予測対象の銘柄コードを取得
-        cls.codes = stock_list[stock_list["universe_comp2"] == True][
-            "Local Code"
-        ].values
+        cls.codes = stock_list[stock_list["universe_comp2"] ==
+                               True]["Local Code"].values
         return cls.codes
 
     @classmethod
-    def get_features_for_predict2(cls, dfs, code, fin_columns, start_dt=TEST_START):
+    def get_features_for_predict2(cls,
+                                  dfs,
+                                  code,
+                                  fin_columns,
+                                  start_dt=TEST_START):
         """
         Args:
             dfs (dict)  : dict of pd.DataFrame include stock_fin, stock_price
@@ -87,59 +89,49 @@ class ScoringService(object):
         # 予測対象日からバッファ含めて土日を除く過去90日遡った時点から特徴量を生成します
         n = 90
         # 特徴量の生成対象期間を指定
-        feats = feats.loc[pd.Timestamp(start_dt) - pd.offsets.BDay(n) :]
+        feats = feats.loc[pd.Timestamp(start_dt) - pd.offsets.BDay(n):]
         # 指定されたカラムおよびExchangeOfficialCloseに絞り込み
-        feats = feats.loc[
-            :, fin_columns + ["EndOfDayQuote ExchangeOfficialClose"]
-        ].copy()
+        feats = feats.loc[:, fin_columns +
+                          ["EndOfDayQuote ExchangeOfficialClose"]].copy()
         # 欠損値処理
         feats = feats.fillna(0)
 
         # 終値の20営業日リターン
         feats["return_1month"] = feats[
-            "EndOfDayQuote ExchangeOfficialClose"
-        ].pct_change(20)
+            "EndOfDayQuote ExchangeOfficialClose"].pct_change(20)
         # 終値の40営業日リターン
         feats["return_2month"] = feats[
-            "EndOfDayQuote ExchangeOfficialClose"
-        ].pct_change(40)
+            "EndOfDayQuote ExchangeOfficialClose"].pct_change(40)
         # 終値の60営業日リターン
         feats["return_3month"] = feats[
-            "EndOfDayQuote ExchangeOfficialClose"
-        ].pct_change(60)
+            "EndOfDayQuote ExchangeOfficialClose"].pct_change(60)
         # 終値の20営業日ボラティリティ
-        feats["volatility_1month"] = (
-            np.log(feats["EndOfDayQuote ExchangeOfficialClose"])
-            .diff()
-            .rolling(20)
-            .std()
-        )
+        feats["volatility_1month"] = (np.log(
+            feats["EndOfDayQuote ExchangeOfficialClose"]).diff().rolling(
+                20).std())
         # 終値の40営業日ボラティリティ
-        feats["volatility_2month"] = (
-            np.log(feats["EndOfDayQuote ExchangeOfficialClose"])
-            .diff()
-            .rolling(40)
-            .std()
-        )
+        feats["volatility_2month"] = (np.log(
+            feats["EndOfDayQuote ExchangeOfficialClose"]).diff().rolling(
+                40).std())
         # 終値の60営業日ボラティリティ
-        feats["volatility_3month"] = (
-            np.log(feats["EndOfDayQuote ExchangeOfficialClose"])
-            .diff()
-            .rolling(60)
-            .std()
-        )
+        feats["volatility_3month"] = (np.log(
+            feats["EndOfDayQuote ExchangeOfficialClose"]).diff().rolling(
+                60).std())
         # 終値と20営業日の単純移動平均線の乖離
-        feats["MA_gap_1month"] = feats["EndOfDayQuote ExchangeOfficialClose"] / (
-            feats["EndOfDayQuote ExchangeOfficialClose"].rolling(20).mean()
-        )
+        feats[
+            "MA_gap_1month"] = feats["EndOfDayQuote ExchangeOfficialClose"] / (
+                feats["EndOfDayQuote ExchangeOfficialClose"].rolling(
+                    20).mean())
         # 終値と40営業日の単純移動平均線の乖離
-        feats["MA_gap_2month"] = feats["EndOfDayQuote ExchangeOfficialClose"] / (
-            feats["EndOfDayQuote ExchangeOfficialClose"].rolling(40).mean()
-        )
+        feats[
+            "MA_gap_2month"] = feats["EndOfDayQuote ExchangeOfficialClose"] / (
+                feats["EndOfDayQuote ExchangeOfficialClose"].rolling(
+                    40).mean())
         # 終値と60営業日の単純移動平均線の乖離
-        feats["MA_gap_3month"] = feats["EndOfDayQuote ExchangeOfficialClose"] / (
-            feats["EndOfDayQuote ExchangeOfficialClose"].rolling(60).mean()
-        )
+        feats[
+            "MA_gap_3month"] = feats["EndOfDayQuote ExchangeOfficialClose"] / (
+                feats["EndOfDayQuote ExchangeOfficialClose"].rolling(
+                    60).mean())
         # 欠損値処理
         feats = feats.fillna(0)
         # 元データのカラムを削除
@@ -158,30 +150,34 @@ class ScoringService(object):
         feats["code"] = code
 
         # 生成対象日以降の特徴量に絞る
-        feats = feats.loc[pd.Timestamp(start_dt) :]
+        feats = feats.loc[pd.Timestamp(start_dt):]
 
         return feats
 
     @classmethod
-    def get_feature_columns(cls, dfs, train_X, column_group="fundamental+technical"):
+    def get_feature_columns(cls,
+                            dfs,
+                            train_X,
+                            column_group="fundamental+technical"):
         # 特徴量グループを定義
         # ファンダメンタル
         fundamental_cols = dfs["stock_fin"].select_dtypes("float64").columns
         fundamental_cols = fundamental_cols[
-            fundamental_cols != "Result_Dividend DividendPayableDate"
-        ]
+            fundamental_cols != "Result_Dividend DividendPayableDate"]
         fundamental_cols = fundamental_cols[fundamental_cols != "Local Code"]
         # 価格変化率
         returns_cols = [x for x in train_X.columns if "return" in x]
         # テクニカル
         technical_cols = [
-            x for x in train_X.columns if (x not in fundamental_cols) and (x != "code")
+            x for x in train_X.columns
+            if (x not in fundamental_cols) and (x != "code")
         ]
         columns = {
             "fundamental_only": fundamental_cols,
             "return_only": returns_cols,
             "technical_only": technical_cols,
-            "fundamental+technical": list(fundamental_cols) + list(technical_cols),
+            "fundamental+technical":
+            list(fundamental_cols) + list(technical_cols),
         }
         return columns[column_group]
 
@@ -208,12 +204,12 @@ class ScoringService(object):
 
         # indexを日付型に変換します変換します。
         df_sentiments.loc[:, "index"] = df_sentiments.index.map(
-            lambda x: cls.transform_yearweek_to_monday(x[0], x[1])
-        )
+            lambda x: cls.transform_yearweek_to_monday(x[0], x[1]))
         # indexを設定します
         df_sentiments.set_index("index", inplace=True)
         # カラム名を変更します
-        df_sentiments.rename(columns={0: "headline_m2_sentiment_0"}, inplace=True)
+        df_sentiments.rename(columns={0: "headline_m2_sentiment_0"},
+                             inplace=True)
         # 分布として使用するデータの範囲に絞り込みます
         df_sentiments = df_sentiments.loc[:DIST_END_DT]
 
@@ -249,22 +245,22 @@ class ScoringService(object):
 
         # 事前に計算済みのセンチメントを分布として使用するために読み込みます
         cls.df_sentiment_dist = cls.load_sentiments(
-            f"{model_path}/headline_features/LSTM_sentiment.pkl"
-        )
+            f"{model_path}/headline_features/LSTM_sentiment.pkl")
 
         return True
 
     @classmethod
     def get_exclude(
-        cls,
-        df_tdnet,  # tdnetのデータ
-        start_dt=None,  # データ取得対象の開始日、Noneの場合は制限なし
-        end_dt=None,  # データ取得対象の終了日、Noneの場合は制限なし
-        lookback=7,  # 除外考慮期間 (days)
-        target_day_of_week=4,  # 起点となる曜日
+            cls,
+            df_tdnet,  # tdnetのデータ
+            start_dt=None,  # データ取得対象の開始日、Noneの場合は制限なし
+            end_dt=None,  # データ取得対象の終了日、Noneの場合は制限なし
+            lookback=7,  # 除外考慮期間 (days)
+            target_day_of_week=4,  # 起点となる曜日
     ):
         # 特別損失のレコードを取得
-        special_loss = df_tdnet[df_tdnet["disclosureItems"].str.contains('201"')].copy()
+        special_loss = df_tdnet[df_tdnet["disclosureItems"].str.contains(
+            '201"')].copy()
         # 日付型を調整
         special_loss["date"] = pd.to_datetime(special_loss["disclosedDate"])
         # 処理対象開始日が設定されていない場合はデータの最初の日付を取得
@@ -274,16 +270,16 @@ class ScoringService(object):
         if end_dt is None:
             end_dt = special_loss["date"].iloc[-1]
         #  処理対象日で絞り込み
-        special_loss = special_loss[
-            (start_dt <= special_loss["date"]) & (special_loss["date"] <= end_dt)
-        ]
+        special_loss = special_loss[(start_dt <= special_loss["date"])
+                                    & (special_loss["date"] <= end_dt)]
         # 出力用にカラムを調整
         res = special_loss[["code", "disclosedDate", "date"]].copy()
         # 銘柄コードを4桁にする
         res["code"] = res["code"].astype(str).str[:-1]
         # 予測の基準となる金曜日の日付にするために調整
         res["remain"] = (target_day_of_week - res["date"].dt.dayofweek) % 7
-        res["start_dt"] = res["date"] + pd.to_timedelta(res["remain"], unit="d")
+        res["start_dt"] = res["date"] + pd.to_timedelta(res["remain"],
+                                                        unit="d")
         res["end_dt"] = res["start_dt"] + pd.Timedelta(days=lookback)
         # 出力するカラムを指定
         columns = ["code", "date", "start_dt", "end_dt"]
@@ -295,7 +291,10 @@ class ScoringService(object):
         # 銘柄選択方法選択
         if strategy_id in [1, 4]:
             # 最高値モデル +　最安値モデル
-            df.loc[:, "pred"] = df.loc[:, "label_high_20"] + df.loc[:, "label_low_20"]
+            df.loc[:,
+                   "pred"] = df.loc[:,
+                                    "label_high_20"] + df.loc[:,
+                                                              "label_low_20"]
         elif strategy_id in [2, 5]:
             # 最高値モデル
             df.loc[:, "pred"] = df.loc[:, "label_high_20"]
@@ -311,31 +310,21 @@ class ScoringService(object):
             df_exclude = cls.get_exclude(df_tdnet)
             # 除外用にユニークな列を作成します。
             df_exclude.loc[:, "date-code_lastweek"] = (
-                df_exclude.loc[:, "start_dt"].dt.strftime("%Y-%m-%d-")
-                + df_exclude.loc[:, "code"]
-            )
+                df_exclude.loc[:, "start_dt"].dt.strftime("%Y-%m-%d-") +
+                df_exclude.loc[:, "code"])
             df_exclude.loc[:, "date-code_thisweek"] = (
-                df_exclude.loc[:, "end_dt"].dt.strftime("%Y-%m-%d-")
-                + df_exclude.loc[:, "code"]
-            )
+                df_exclude.loc[:, "end_dt"].dt.strftime("%Y-%m-%d-") +
+                df_exclude.loc[:, "code"])
             #
-            df.loc[:, "date-code_lastweek"] = (df.index - pd.Timedelta("7D")).strftime(
-                "%Y-%m-%d-"
-            ) + df.loc[:, "code"].astype(str)
-            df.loc[:, "date-code_thisweek"] = df.index.strftime("%Y-%m-%d-") + df.loc[
-                :, "code"
-            ].astype(str)
+            df.loc[:, "date-code_lastweek"] = (df.index - pd.Timedelta(
+                "7D")).strftime("%Y-%m-%d-") + df.loc[:, "code"].astype(str)
+            df.loc[:, "date-code_thisweek"] = df.index.strftime(
+                "%Y-%m-%d-") + df.loc[:, "code"].astype(str)
             # 特別損失銘柄を除外
-            df = df.loc[
-                ~df.loc[:, "date-code_lastweek"].isin(
-                    df_exclude.loc[:, "date-code_lastweek"]
-                )
-            ]
-            df = df.loc[
-                ~df.loc[:, "date-code_thisweek"].isin(
-                    df_exclude.loc[:, "date-code_thisweek"]
-                )
-            ]
+            df = df.loc[~df.loc[:, "date-code_lastweek"].
+                        isin(df_exclude.loc[:, "date-code_lastweek"])]
+            df = df.loc[~df.loc[:, "date-code_thisweek"].
+                        isin(df_exclude.loc[:, "date-code_thisweek"])]
 
         # 予測出力を降順に並び替え
         df = df.sort_values("pred", ascending=False)
@@ -409,7 +398,8 @@ class ScoringService(object):
         # purchase_date が存在する場合は予測対象日を上書き
         if "purchase_date" in cls.dfs.keys():
             # purchase_dateの最も古い日付を設定
-            start_dt = cls.dfs["purchase_date"].sort_values("Purchase Date").iloc[0, 0]
+            start_dt = cls.dfs["purchase_date"].sort_values(
+                "Purchase Date").iloc[0, 0]
 
         # 日付型に変換
         start_dt = pd.Timestamp(start_dt)
@@ -444,8 +434,8 @@ class ScoringService(object):
         buff = []
         for code in tqdm(codes):
             buff.append(
-                cls.get_features_for_predict2(cls.dfs, code, fin_columns, start_dt)
-            )
+                cls.get_features_for_predict2(cls.dfs, code, fin_columns,
+                                              start_dt))
         feats = pd.concat(buff)
 
         # 結果を以下のcsv形式で出力する
@@ -480,7 +470,8 @@ class ScoringService(object):
         print("[+] predict")
         for label in tqdm(labels):
             # 予測実施
-            df[label] = ScoringService.models[label].predict(feats[feature_columns])
+            df[label] = ScoringService.models[label].predict(
+                feats[feature_columns])
             # 出力対象列に追加
 
         # 銘柄選択方法選択
@@ -515,10 +506,10 @@ class ScoringService(object):
         )["headline_features"]
 
         df_sentiments.loc[:, "index"] = df_sentiments.index.map(
-            lambda x: cls.transform_yearweek_to_monday(x[0], x[1])
-        )
+            lambda x: cls.transform_yearweek_to_monday(x[0], x[1]))
         df_sentiments.set_index("index", inplace=True)
-        df_sentiments.rename(columns={0: "headline_m2_sentiment_0"}, inplace=True)
+        df_sentiments.rename(columns={0: "headline_m2_sentiment_0"},
+                             inplace=True)
         return df_sentiments
 
     @classmethod
@@ -542,14 +533,11 @@ class ScoringService(object):
         df_sentiment = df_sentiment.copy()
         # headline_m2_sentiment_0の値が高いほどポジティブなので符号反転させる
         sentiment_dist = sorted(
-            df_sentiment.loc[
-                DIST_START_DT:DIST_END_DT, "headline_m2_sentiment_0"
-            ].values
-            * -1
-        )
+            df_sentiment.loc[DIST_START_DT:DIST_END_DT,
+                             "headline_m2_sentiment_0"].values * -1)
         sentiment_use = (
-            df_sentiment.loc[USE_START_DT:, "headline_m2_sentiment_0"].values * -1
-        )
+            df_sentiment.loc[USE_START_DT:, "headline_m2_sentiment_0"].values *
+            -1)
 
         # DIST_START_DT:DIST_END_DTの分布を使用してリスク判定する
         z = zscore(sentiment_dist)

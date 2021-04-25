@@ -19,19 +19,18 @@ from transformers import BertJapaneseTokenizer
 class Dataset(_Dataset):
     def __init__(self, weekly_features, weekly_labels, max_sequence_length):
         # 共通する週のみを使うため、共通するindex情報を取得する
-        mask_index = (
-            weekly_features.index.get_level_values(0).unique() & weekly_labels.index
-        )
+        mask_index = (weekly_features.index.get_level_values(0).unique()
+                      & weekly_labels.index)
 
         # 共通するindexのみのデータだけでreindexを行う。
         self.weekly_features = weekly_features[
-            weekly_features.index.get_level_values(0).isin(mask_index)
-        ]
+            weekly_features.index.get_level_values(0).isin(mask_index)]
         self.weekly_labels = weekly_labels.reindex(mask_index)
 
         # idからweekの情報を取得できるよう、id_to_weekをビルドする
         self.id_to_week = {
-            id: week for id, week in enumerate(sorted(weekly_labels.index))
+            id: week
+            for id, week in enumerate(sorted(weekly_labels.index))
         }
 
         self.max_sequence_length = max_sequence_length
@@ -51,12 +50,14 @@ class Dataset(_Dataset):
     def __getitem__(self, id):
         # 付与されたidから週の情報を取得し、その週の情報から、特徴量とラベルを取得する。
         week = self.id_to_week[id]
-        x = self.weekly_features.xs(week, axis=0, level=0)[-self.max_sequence_length :]
+        x = self.weekly_features.xs(week, axis=0,
+                                    level=0)[-self.max_sequence_length:]
         y = self.weekly_labels[week]
 
         # pytorchでは、データをtorch.Tensorタイプとして扱うことが要求される。
         # 全体的な特徴量(ニュースの情報)の順序は維持しつつ、入力とする特徴量を数分割し、その分割の中でシャッフルを行う。
-        x = self._shuffle_by_local_split(torch.tensor(x.values, dtype=torch.float))
+        x = self._shuffle_by_local_split(
+            torch.tensor(x.values, dtype=torch.float))
         y = torch.tensor(y, dtype=torch.float)
 
         # max_sequence_lengthに最大のsequenceを合わせ、sequenceがmax_sequence_lengthに達しない場合は、前から0を埋め、sequenceを合わせる
@@ -97,7 +98,8 @@ class FeatureCombiner(nn.Module):
     def forward(self, x):
         # 入力値xから出力までの流れを定義する。
         output, _ = self.cell(x)
-        output = self.sigmoid(self.classifier(self.compressor(output[:, -1, :])))
+        output = self.sigmoid(
+            self.classifier(self.compressor(output[:, -1, :])))
         return output
 
     def extract_feature(self, x):
@@ -123,8 +125,7 @@ class FeatureCombinerHandler:
 
         # 上記で作成したfeaturecombinerを定義する。
         self.feature_combiner = FeatureCombiner(**feature_combiner_params).to(
-            self.device
-        )
+            self.device)
 
         # 学習に用いるoptimizerを定義する。
         self.optimizer = torch.optim.Adam(
@@ -197,13 +198,13 @@ class FeatureCombinerHandler:
 
         # 複数個のchieck_pointが存在する場合、一番最新のものを使い、モデルのパラメータをロードする
         check_point = check_points[-1]
-        self.feature_combiner.load_state_dict(torch.load(check_point, **params_to_load))
+        self.feature_combiner.load_state_dict(
+            torch.load(check_point, **params_to_load))
         print("[+] Model is loaded")
 
     # Datasetからdataloaderを定義するロジック
-    def _build_dataloader(
-        self, dataloader_params, weekly_features, weekly_labels, max_sequence_length
-    ):
+    def _build_dataloader(self, dataloader_params, weekly_features,
+                          weekly_labels, max_sequence_length):
         # 上記3で作成したしたdatasetを定義する
         dataset = Dataset(
             weekly_features=weekly_features,
@@ -215,9 +216,8 @@ class FeatureCombinerHandler:
         return DataLoader(dataset=dataset, shuffle=True, **dataloader_params)
 
     # train用に、featuresとlabelsを渡し、datasetを定義し、dataloaderを定義するロジック
-    def set_train_dataloader(
-        self, dataloader_params, weekly_features, weekly_labels, max_sequence_length
-    ):
+    def set_train_dataloader(self, dataloader_params, weekly_features,
+                             weekly_labels, max_sequence_length):
         self.train_dataloader = self._build_dataloader(
             dataloader_params=dataloader_params,
             weekly_features=weekly_features,
@@ -230,9 +230,8 @@ class FeatureCombinerHandler:
         self.iterable_train_dataloader = iter(self.train_dataloader)
 
     # validation用に、featuresとlabelsを渡し、datasetを定義し、dataloaderを定義するロジック
-    def set_val_dataloader(
-        self, dataloader_params, weekly_features, weekly_labels, max_sequence_length
-    ):
+    def set_val_dataloader(self, dataloader_params, weekly_features,
+                           weekly_labels, max_sequence_length):
         self.val_dataloader = self._build_dataloader(
             dataloader_params=dataloader_params,
             weekly_features=weekly_features,
@@ -315,13 +314,8 @@ class FeatureCombinerHandler:
 
             # 特徴量をfeature_combinerのextract_feature関数に入力し、出力層手前の特徴量を抽出する。
             # 抽出するとき、tensorをcpu上に落とし、np.ndarray形式に変換する。
-            return (
-                self.feature_combiner.extract_feature(
-                    x=torch.tensor(features, dtype=torch.float).to(self.device)
-                )
-                .cpu()
-                .numpy()
-            )
+            return (self.feature_combiner.extract_feature(x=torch.tensor(
+                features, dtype=torch.float).to(self.device)).cpu().numpy())
 
     # 特徴量から、翌週のsentimentを予測するロジック
     def predict_sentiment(self, features):
@@ -333,24 +327,19 @@ class FeatureCombinerHandler:
 
             # 特徴量をfeature_combinerに入力し、sentiment scoreを抽出する。
             # 抽出するとき、tensorをcpu上に落とし、np.ndarray形式に変換する。
-            return (
-                self.feature_combiner(
-                    x=torch.tensor(features, dtype=torch.float).to(self.device)
-                )
-                .cpu()
-                .numpy()
-            )
+            return (self.feature_combiner(x=torch.tensor(
+                features, dtype=torch.float).to(self.device)).cpu().numpy())
 
     # weeklyグループされた特徴量を入力に、合成特徴量もしくは、sentiment scoreを抽出するロジック
-    def generate_by_weekly_features(
-        self, weekly_features, generate_target, max_sequence_length
-    ):
+    def generate_by_weekly_features(self, weekly_features, generate_target,
+                                    max_sequence_length):
         assert generate_target in ("features", "sentiment")
         generate_func = getattr(
             self,
-            {"features": "combine_features", "sentiment": "predict_sentiment"}[
-                generate_target
-            ],
+            {
+                "features": "combine_features",
+                "sentiment": "predict_sentiment"
+            }[generate_target],
         )
 
         # グループごとに特徴量もしくは、sentiment scoreを抽出し、最終的に重ねて返すため、リストを作成する。
@@ -361,12 +350,14 @@ class FeatureCombinerHandler:
 
         for week in tqdm(weeks):
             # 各週ごとの特徴量を取得し、直近から、max_sequence_length分切る。
-            features = weekly_features.xs(week, axis=0, level=0)[-max_sequence_length:]
+            features = weekly_features.xs(week, axis=0,
+                                          level=0)[-max_sequence_length:]
 
             # 特徴量をモデルに入力し、合成特徴量もしくは、sentiment scoreを抽出し、outputsにappendする。
             # np.expand_dims(features, axis=0)を用いる理由は、特徴量合成機の入力期待値は、dimention0がbatchであるが、
             # featuresは、[1000, 768]の次元をもち、これらをunsqueezeし、[1, 1000, 768]に変換する必要がある。
-            outputs.append(generate_func(features=np.expand_dims(features, axis=0)))
+            outputs.append(
+                generate_func(features=np.expand_dims(features, axis=0)))
 
         # outputsを重ね、indexの情報とともにpd.DataFrame形式として返す。
         return pd.DataFrame(np.concatenate(outputs, axis=0), index=weeks)
@@ -393,11 +384,17 @@ class SentimentGenerator(object):
 
         # LSTM特徴量合成機をセットする。
         cls.headline_feature_combiner_handler = FeatureCombinerHandler(
-            feature_combiner_params={"input_size": 768, "hidden_size": 128},
+            feature_combiner_params={
+                "input_size": 768,
+                "hidden_size": 128
+            },
             store_dir=f"{base_dir}/headline_features",
         )
         cls.keywords_feature_combiner_handler = FeatureCombinerHandler(
-            feature_combiner_params={"input_size": 768, "hidden_size": 128},
+            feature_combiner_params={
+                "input_size": 768,
+                "hidden_size": 128
+            },
             store_dir=f"{base_dir}/keywords_features",
         )
 
@@ -490,13 +487,15 @@ class SentimentGenerator(object):
             print("[+] Set Device: CPU")
 
     @classmethod
-    def load_feature_extractor(cls, model_dir, download=False, save_local=False):
+    def load_feature_extractor(cls,
+                               model_dir,
+                               download=False,
+                               save_local=False):
         # 特徴量抽出のため事前学習済みBERTモデルを用いる。
         # ここでは、"cl-tohoku/bert-base-japanese-whole-word-masking"モデルを使用しているが、異なる日本語BERTモデルを用いても良い。
         target_model = "cl-tohoku/bert-base-japanese-whole-word-masking"
         save_dir = os.path.abspath(
-            f"{model_dir}/transformers_pretrained/{target_model}"
-        )
+            f"{model_dir}/transformers_pretrained/{target_model}")
         if download:
             pretrained_model = target_model
         else:
@@ -537,13 +536,13 @@ class SentimentGenerator(object):
         # この章ではBertJapaneseTokenizerを利用し、トークナイズ及びsubword化を行う。
         target_model = "cl-tohoku/bert-base-japanese-whole-word-masking"
         save_dir = os.path.abspath(
-            f"{model_dir}/transformers_pretrained/{target_model}"
-        )
+            f"{model_dir}/transformers_pretrained/{target_model}")
         if download:
             pretrained_model = target_model
         else:
             pretrained_model = save_dir
-        bert_tokenizer = BertJapaneseTokenizer.from_pretrained(pretrained_model)
+        bert_tokenizer = BertJapaneseTokenizer.from_pretrained(
+            pretrained_model)
         if download and save_local:
             print(f"[+] save bert_tokenizer: {save_dir}")
             bert_tokenizer.save_pretrained(save_dir)
@@ -561,7 +560,8 @@ class SentimentGenerator(object):
     def load_articles(cls, path, start_dt=None, end_dt=None):
         # csvをロードする
         # headline、keywordsをcolumnとして使用。publish_datetimeをindexとして使用。
-        articles = pd.read_csv(path)[cls.article_columns].set_index("publish_datetime")
+        articles = pd.read_csv(path)[cls.article_columns].set_index(
+            "publish_datetime")
 
         # str形式のdatetimeをpd.Timestamp形式に変換
         articles.index = pd.to_datetime(articles.index)
@@ -582,10 +582,12 @@ class SentimentGenerator(object):
         for column in articles.columns:
             # スペース(全角スペースを含む)はneologdn正規化時に全て除去される。
             # ここでは、スペースの情報が失われないように、スペースを全て改行に書き換え、正規化後スペースに再変換する。
-            articles[column] = articles[column].apply(lambda x: "\n".join(x.split()))
+            articles[column] = articles[column].apply(
+                lambda x: "\n".join(x.split()))
 
             # neologdnを使って正規化を行う。
-            articles[column] = articles[column].apply(lambda x: neologdn.normalize(x))
+            articles[column] = articles[column].apply(
+                lambda x: neologdn.normalize(x))
 
             # 改行をスペースに置換する。
             articles[column] = articles[column].str.replace("\n", " ")
@@ -599,19 +601,17 @@ class SentimentGenerator(object):
         for column in articles.columns:
             # punctuation_remove_listに含まれる記号を除去する
             articles[column] = articles[column].str.replace(
-                fr"[{''.join(cls.punctuation_remove_list)}]", ""
-            )
+                fr"[{''.join(cls.punctuation_remove_list)}]", "")
 
             # punctuation_replace_dictに含まれる記号を置換する
-            for replace_base, replace_target in cls.punctuation_replace_dict.items():
+            for replace_base, replace_target in cls.punctuation_replace_dict.items(
+            ):
                 articles[column] = articles[column].str.replace(
-                    replace_base, replace_target
-                )
+                    replace_base, replace_target)
 
             # unicode正規化を行う
             articles[column] = articles[column].apply(
-                lambda x: unicodedata.normalize("NFKC", x)
-            )
+                lambda x: unicodedata.normalize("NFKC", x))
 
         return articles
 
@@ -621,9 +621,9 @@ class SentimentGenerator(object):
 
         for remove_list_word in remove_list_words:
             # headlineもしくは、keywordsどちらかでremove_list_wordを含むニュース記事のindexマスクを作成。
-            drop_mask = articles["headline"].str.contains(remove_list_word) | articles[
-                "keywords"
-            ].str.contains(remove_list_word)
+            drop_mask = articles["headline"].str.contains(
+                remove_list_word) | articles["keywords"].str.contains(
+                    remove_list_word)
 
             # remove_list_wordを含まないニュースだけに精製する。
             articles = articles[~drop_mask]
@@ -652,8 +652,10 @@ class SentimentGenerator(object):
 
         # torchモデルに入力するためにはtensor形式に変え、deviceを指定する必要がある。
         input_ids = torch.tensor(input_ids, dtype=torch.long).to(cls.device)
-        token_type_ids = torch.tensor(token_type_ids, dtype=torch.long).to(cls.device)
-        attention_mask = torch.tensor(attention_mask, dtype=torch.long).to(cls.device)
+        token_type_ids = torch.tensor(token_type_ids,
+                                      dtype=torch.long).to(cls.device)
+        attention_mask = torch.tensor(attention_mask,
+                                      dtype=torch.long).to(cls.device)
 
         return input_ids, token_type_ids, attention_mask
 
@@ -664,7 +666,8 @@ class SentimentGenerator(object):
             token_type_ids=token_type_ids,
             attention_mask=attention_mask,
         )
-        features = output["hidden_states"][-2].mean(dim=1).cpu().detach().numpy()
+        features = output["hidden_states"][-2].mean(
+            dim=1).cpu().detach().numpy()
 
         return features
 
@@ -675,7 +678,7 @@ class SentimentGenerator(object):
         features = []
         for idx in tqdm(range(n_batch)):
             input_ids, token_type_ids, attention_mask = cls.build_inputs(
-                texts=texts[batch_size * idx : batch_size * (idx + 1)],
+                texts=texts[batch_size * idx:batch_size * (idx + 1)],
                 max_length=max_length,
             )
 
@@ -684,8 +687,7 @@ class SentimentGenerator(object):
                     input_ids=input_ids,
                     token_type_ids=token_type_ids,
                     attention_mask=attention_mask,
-                )
-            )
+                ))
 
         features = np.concatenate(features, axis=0)
 
@@ -695,7 +697,8 @@ class SentimentGenerator(object):
     @classmethod
     def _build_weekly_group(cls, df):
         # index情報から、(year, week)の情報を得る。
-        return pd.Series(list(zip(df.index.year, df.index.week)), index=df.index)
+        return pd.Series(list(zip(df.index.year, df.index.week)),
+                         index=df.index)
 
     @classmethod
     def build_weekly_features(cls, features, boundary_week):
@@ -704,18 +707,20 @@ class SentimentGenerator(object):
         weekly_group = cls._build_weekly_group(df=features)
         features = features.groupby(weekly_group).apply(lambda x: x[:])
 
-        train_features = features[features.index.get_level_values(0) <= boundary_week]
-        test_features = features[features.index.get_level_values(0) > boundary_week]
+        train_features = features[
+            features.index.get_level_values(0) <= boundary_week]
+        test_features = features[
+            features.index.get_level_values(0) > boundary_week]
 
         return {"train": train_features, "test": test_features}
 
     @classmethod
     def generate_lstm_features(
-        cls,
-        article_path,
-        start_dt=None,
-        boundary_week=(2020, 26),
-        target_feature_types=None,
+            cls,
+            article_path,
+            start_dt=None,
+            boundary_week=(2020, 26),
+            target_feature_types=None,
     ):
         # target_feature_typesが指定されなかったらデフォルト値設定
         dfault_target_feature_types = [
@@ -740,7 +745,8 @@ class SentimentGenerator(object):
 
         for feature_type in target_feature_types:
             # コーパス全体のBERT特徴量を抽出する。
-            features = cls.generate_features_by_texts(texts=articles[feature_type])
+            features = cls.generate_features_by_texts(
+                texts=articles[feature_type])
 
             # feature_typeに合致するfeature_combiner_handlerをclsから取得する。
             feature_combiner_handler = {
@@ -749,15 +755,15 @@ class SentimentGenerator(object):
             }[feature_type]
 
             # 特徴量を週毎のグループ化する。
-            weekly_features = cls.build_weekly_features(features, boundary_week)["test"]
+            weekly_features = cls.build_weekly_features(
+                features, boundary_week)["test"]
 
             # Sentiment scoreを抽出する。
             lstm_features[
-                f"{feature_type}_features"
-            ] = feature_combiner_handler.generate_by_weekly_features(
-                weekly_features=weekly_features,
-                generate_target="sentiment",
-                max_sequence_length=10000,
-            )
+                f"{feature_type}_features"] = feature_combiner_handler.generate_by_weekly_features(
+                    weekly_features=weekly_features,
+                    generate_target="sentiment",
+                    max_sequence_length=10000,
+                )
 
-        return lstm_features 
+        return lstm_features
