@@ -32,6 +32,13 @@ $ echo "2020-12-28" >> data/purchase_date.csv
 # 実行方法
 
 ```
+$ docker build . -t dondakeshimo/signate-j-quants
+$ docker run --gpus all --rm -it -v $(pwd):/opt/ml -w /opt/ml dondakeshimo/signate-j-quants python src/main.py
+```
+
+一応docker-composeでも立ち上げられる。
+```
+(deprecated)
 $ docker-compose up
 ```
 
