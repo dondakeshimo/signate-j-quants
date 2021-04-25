@@ -43,6 +43,13 @@ $ docker-compose up
 ```
 
 
+# Jupyter実行方法
+```
+$ docker run --rm --name tutorial --shm-size=2G -v ${PWD}:/notebook -p8888:8888 --rm -it signate/runtime-jpx:2021.03 jupyter notebook --ip 0.0.0.0 --allow-root --no-browser --no-mathjax --NotebookApp.disable_check_xsrf=True --NotebookApp.token='' --NotebookApp.password='' /notebook
+```
+ipynbは `ipynb` ディレクトリ配下に作成すること。
+
+
 # 提出方法
 成果物を下記コマンドで生成する。
 
