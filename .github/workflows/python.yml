@@ -2,7 +2,6 @@ name: Python
 
 on:
   pull_request:
-    branches: [ master ]
 
 jobs:
   check:
