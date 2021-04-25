@@ -20,6 +20,18 @@ https://signate.jp/competitions/443/data
 
 をダウンロードし、 `model/` 配下で解凍する。
 
+`Chapter02_models.zip` については余分な階層がうまれてしまっているので `pkl` ファイルを `model` 直下に移動させる
+
+```
+$ mv model/Chapter02_models/*.pkl model/
+```
+
+BERTに使用する学習済みモデルをダウンロードする
+
+```
+$ docker run --rm -it -v $(pwd):/opt/ml dondakeshimo/signate-j-quants python hack/download_bert_model.py
+```
+
 ## 買付日
 買付日の指定を行う。とりあえずはチュートリアルで指定していた日付。
 
@@ -33,7 +45,7 @@ $ echo "2020-12-28" >> data/purchase_date.csv
 
 ```
 $ docker build . -t dondakeshimo/signate-j-quants
-$ docker run --gpus all --rm -it -v $(pwd):/opt/ml -w /opt/ml dondakeshimo/signate-j-quants python src/main.py
+$ docker run --gpus all --rm -it -v $(pwd):/opt/ml dondakeshimo/signate-j-quants python src/main.py
 ```
 
 一応docker-composeでも立ち上げられる。
