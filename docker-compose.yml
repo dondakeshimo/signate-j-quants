@@ -1,0 +1,13 @@
+services:
+  predictor:
+    build: .
+    volumes:
+    - .:/opt/ml
+    command: python src/main.py
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: [gpu]
+            count: all
