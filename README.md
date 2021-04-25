@@ -4,6 +4,12 @@ https://signate.jp/competitions/443
 
 # 準備
 
+## docker image
+
+```
+$ docker build . -t dondakeshimo/signate-j-quants
+```
+
 ## data
 https://signate.jp/competitions/443/data
 
@@ -44,7 +50,6 @@ $ echo "2020-12-28" >> data/purchase_date.csv
 # 実行方法
 
 ```
-$ docker build . -t dondakeshimo/signate-j-quants
 $ docker run --gpus all --rm -it -v $(pwd):/opt/ml dondakeshimo/signate-j-quants python src/main.py
 ```
 
