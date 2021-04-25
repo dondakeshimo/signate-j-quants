@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Directory
+data/*
+!data/.gitkeep
+model/*
+!model/.gitkeep
