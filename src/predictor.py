@@ -6,6 +6,7 @@ import pickle
 import numpy as np
 import pandas as pd
 from module import SentimentGenerator
+from usecases.feature.feature_only_stock_service import FeatureOnlyStockService
 from scipy.stats import zscore
 from tqdm.auto import tqdm
 
@@ -159,7 +160,6 @@ class ScoringService(object):
 
         # 生成対象日以降の特徴量に絞る
         feats = feats.loc[pd.Timestamp(start_dt) :]
-
         return feats
 
     @classmethod
@@ -375,6 +375,142 @@ class ScoringService(object):
         Returns:
             str: Inference for the given input.
         """
+        # データ読み込み
+        if cls.dfs is None:
+            print("[+] load data")
+            cls.get_dataset(inputs, load_data)
+            cls.get_codes(cls.dfs)
+
+        # purchase_date が存在する場合は予測対象日を上書き
+        if "purchase_date" in cls.dfs.keys():
+            # purchase_dateの最も古い日付を設定
+            start_dt = cls.dfs["purchase_date"].sort_values("Purchase Date").iloc[0, 0]
+
+        # 日付型に変換
+        start_dt = pd.Timestamp(start_dt)
+        # 予測対象日の月曜日日付が指定されているため
+        # 特徴量の抽出に使用する1週間前の日付に変換します
+        start_dt -= pd.Timedelta("7D")
+        # 文字列型に戻す
+        start_dt = start_dt.strftime("%Y-%m-%d")
+
+        feature_service = FeatureOnlyStockService(inputs, start_dt)
+        feature_service.preprocess()
+
+        # 予測対象の目的変数を設定
+        if labels is None:
+            labels = cls.TARGET_LABELS
+
+        ###################
+        # センチメント情報取得
+        ###################
+        # ニュース見出しデータへのパスを指定
+        df_sentiments = cls.get_sentiment(inputs, start_dt=start_dt)
+        #
+        # 金曜日日付に変更
+        df_sentiments.index = df_sentiments.index + pd.Timedelta("4D")
+        # 分布データを取り込み
+        df_sentiments = pd.concat([cls.df_sentiment_dist, df_sentiments])
+
+        # センチメントから現金比率を算出
+        df_cash = cls.get_cash_ratio(df_sentiments)
+
+        # 特徴量を作成
+        print("[+] generate feature")
+        feats = feature_service.extract_feature()
+        feats.to_csv("new.csv")
+
+        # 結果を以下のcsv形式で出力する
+        # 1列目:date
+        # 2列目:Local Code
+        # 3列目:budget
+        # headerあり、2列目3列目はint64
+
+        # 日付と銘柄コードに絞り込み
+        df = feats.loc[:, ["code"]].copy()
+        print(df)
+        # 購入金額を設定 (ここでは一律50000とする)
+        df.loc[:, "budget"] = 50000
+        print(df_cash)
+        df_cash.to_csv("new_cash.csv")
+        for s in df_cash.index:
+            t = df_cash.loc[df_cash.index == s, "risk"][0]
+            if t == 10:
+                cash = 40000
+            elif t == 20:
+                cash = 30000
+            elif t == 30:
+                cash = 20000
+            else:
+                cash = 50000
+
+            df.loc[df.index == s, "budget"] = cash
+
+        # 特徴量カラムを指定
+        feature_columns = ScoringService.get_feature_columns(cls.dfs, feats)
+        print(feature_columns)
+        feats[feature_columns].to_csv("new_before_predict.csv")
+
+        # 目的変数毎に予測
+        print("[+] predict")
+        for label in tqdm(labels):
+            # 予測実施
+            df[label] = ScoringService.models[label].predict(feats[feature_columns])
+            # 出力対象列に追加
+
+        df.to_csv("new_before_strategy.csv")
+
+        # 銘柄選択方法選択
+        df = cls.strategy(strategy_id, df, cls.dfs["tdnet"])
+
+        # 日付順に並び替え
+        df.sort_index(kind="mergesort", inplace=True)
+        # 月曜日日付に変更
+        df.index = df.index + pd.Timedelta("3D")
+        # 出力用に調整
+        df.index.name = "date"
+        df.rename(columns={"code": "Local Code"}, inplace=True)
+        df.reset_index(inplace=True)
+
+        # 出力対象列を定義
+        output_columns = ["date", "Local Code", "budget"]
+
+        out = io.StringIO()
+        df.to_csv(out, header=True, index=False, columns=output_columns)
+
+        return out.getvalue()
+
+    @classmethod
+    def old_predict(
+        cls,
+        inputs,
+        labels=None,
+        codes=None,
+        start_dt=TEST_START,
+        load_data=[
+            "stock_list",
+            "stock_fin",
+            "stock_fin_price",
+            "stock_price",
+            "tdnet",
+            "purchase_date",
+        ],
+        fin_columns=None,
+        strategy_id=5,
+    ):
+        """Predict method
+
+        Args:
+            inputs (dict[str]): paths to the dataset files
+            labels (list[str]): target label names
+            codes (list[int]): traget codes
+            start_dt (str): specify target purchase date
+            load_data (list[str]): list of data to load
+            fin_columns (list[str]): list of columns to use as features
+            strategy_id (int): specify strategy to use
+        Returns:
+            str: Inference for the given input.
+        """
         if fin_columns is None:
             fin_columns = [
                 "Result_FinancialStatement FiscalYear",
@@ -447,6 +583,7 @@ class ScoringService(object):
                 cls.get_features_for_predict2(cls.dfs, code, fin_columns, start_dt)
             )
         feats = pd.concat(buff)
+        feats.to_csv("old.csv")
 
         # 結果を以下のcsv形式で出力する
         # 1列目:date
@@ -460,6 +597,7 @@ class ScoringService(object):
         # 購入金額を設定 (ここでは一律50000とする)
         df.loc[:, "budget"] = 50000
         print(df_cash)
+        df_cash.to_csv("old_cash.csv")
         for s in df_cash.index:
             t = df_cash.loc[df_cash.index == s, "risk"][0]
             if t == 10:
@@ -475,6 +613,8 @@ class ScoringService(object):
 
         # 特徴量カラムを指定
         feature_columns = ScoringService.get_feature_columns(cls.dfs, feats)
+        print(feature_columns)
+        feats[feature_columns].to_csv("old_before_predict.csv")
 
         # 目的変数毎に予測
         print("[+] predict")
@@ -482,6 +622,8 @@ class ScoringService(object):
             # 予測実施
             df[label] = ScoringService.models[label].predict(feats[feature_columns])
             # 出力対象列に追加
+
+        df.to_csv("old_before_strategy.csv")
 
         # 銘柄選択方法選択
         df = cls.strategy(strategy_id, df, cls.dfs["tdnet"])
