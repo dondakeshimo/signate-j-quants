@@ -55,29 +55,6 @@ class ScoringService(object):
         return cls.dfs
 
     @classmethod
-    def get_feature_columns(cls, dfs, train_X, column_group="fundamental+technical"):
-        # 特徴量グループを定義
-        # ファンダメンタル
-        fundamental_cols = dfs["stock_fin"].select_dtypes("float64").columns
-        fundamental_cols = fundamental_cols[
-            fundamental_cols != "Result_Dividend DividendPayableDate"
-        ]
-        fundamental_cols = fundamental_cols[fundamental_cols != "Local Code"]
-        # 価格変化率
-        returns_cols = [x for x in train_X.columns if "return" in x]
-        # テクニカル
-        technical_cols = [
-            x for x in train_X.columns if (x not in fundamental_cols) and (x != "code")
-        ]
-        columns = {
-            "fundamental_only": fundamental_cols,
-            "return_only": returns_cols,
-            "technical_only": technical_cols,
-            "fundamental+technical": list(fundamental_cols) + list(technical_cols),
-        }
-        return columns[column_group]
-
-    @classmethod
     def transform_yearweek_to_monday(cls, year, week):
         """
         ニュースから抽出した特徴量データのindexは (year, week) なので、
@@ -126,16 +103,6 @@ class ScoringService(object):
             bool: The return value. True for success, False otherwise.
 
         """
-        if cls.models is None:
-            cls.models = {}
-        if labels is None:
-            labels = cls.TARGET_LABELS
-        for label in labels:
-            m = os.path.join(model_path, f"my_model_{label}.pkl")
-            with open(m, "rb") as f:
-                # pickle形式で保存されているモデルを読み込み
-                cls.models[label] = pickle.load(f)
-
         cls.model_path = model_path
 
         # SentimentGeneratorクラスの初期設定を実施
