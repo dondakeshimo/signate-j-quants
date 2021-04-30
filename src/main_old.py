@@ -1,4 +1,4 @@
-from predictor import ScoringService
+from predictor_old import ScoringService
 
 dataset_dir = "./data"
 model_path = "./model"
@@ -28,5 +28,5 @@ ScoringService.get_model(model_path)
 ret = ScoringService.old_predict(inputs)
 print("\n".join(ret.split("\n")[:10]))
 
-with open(f"{output_path}/chapter06-tutorial-2.csv", mode="w") as f:
+with open(f"{output_path}/chapter06-tutorial-old.csv", mode="w") as f:
     f.write(ret)
