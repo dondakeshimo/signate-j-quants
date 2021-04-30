@@ -5,8 +5,7 @@ import pickle
 
 import numpy as np
 import pandas as pd
-from module import SentimentGenerator
-from usecases.feature.feature_stock_price_prediction_service import FeatureStockPricePredictionService
+from usecases.feature.feature_stock_price_news_service import FeatureStockPriceNewsService
 from scipy.stats import zscore
 
 
@@ -55,43 +54,6 @@ class ScoringService(object):
         return cls.dfs
 
     @classmethod
-    def transform_yearweek_to_monday(cls, year, week):
-        """
-        ニュースから抽出した特徴量データのindexは (year, week) なので、
-        (year, week) => YYYY-MM-DD 形式(月曜日) に変換します。
-        """
-        for s in pd.date_range(f"{year}-01-01", f"{year}-12-31", freq="D"):
-            if s.week == week:
-                # to return Monday of the first week of the year
-                # e.g. "2020-01-01" => "2019-12-30"
-                return s - pd.Timedelta(f"{s.dayofweek}D")
-
-    @classmethod
-    def load_sentiments(cls, path=None):
-        DIST_END_DT = "2020-09-25"
-
-        print(f"[+] load prepared sentiment: {path}")
-
-        # 事前に出力したセンチメントの分布を読み込み
-        df_sentiments = pd.read_pickle(path)
-
-        # indexを日付型に変換します変換します。
-        df_sentiments.loc[:, "index"] = df_sentiments.index.map(
-            lambda x: cls.transform_yearweek_to_monday(x[0], x[1])
-        )
-        # indexを設定します
-        df_sentiments.set_index("index", inplace=True)
-        # カラム名を変更します
-        df_sentiments.rename(columns={0: "headline_m2_sentiment_0"}, inplace=True)
-        # 分布として使用するデータの範囲に絞り込みます
-        df_sentiments = df_sentiments.loc[:DIST_END_DT]
-
-        # 金曜日日付に変更します
-        df_sentiments.index = df_sentiments.index + pd.Timedelta("4D")
-
-        return df_sentiments
-
-    @classmethod
     def get_model(cls, model_path="../model", labels=None):
         """Get model method
 
@@ -104,14 +66,6 @@ class ScoringService(object):
 
         """
         cls.model_path = model_path
-
-        # SentimentGeneratorクラスの初期設定を実施
-        SentimentGenerator.initialize(model_path)
-
-        # 事前に計算済みのセンチメントを分布として使用するために読み込みます
-        cls.df_sentiment_dist = cls.load_sentiments(
-            f"{model_path}/headline_features/LSTM_sentiment.pkl"
-        )
 
         return True
 
@@ -254,27 +208,18 @@ class ScoringService(object):
         # 文字列型に戻す
         start_dt = start_dt.strftime("%Y-%m-%d")
 
-        feature_service = FeatureStockPricePredictionService(inputs, cls.model_path, start_dt)
+        feature_service = FeatureStockPriceNewsService(inputs, cls.model_path, start_dt)
         feature_service.preprocess()
-
-        ###################
-        # センチメント情報取得
-        ###################
-        # ニュース見出しデータへのパスを指定
-        df_sentiments = cls.get_sentiment(inputs, start_dt=start_dt)
-        #
-        # 金曜日日付に変更
-        df_sentiments.index = df_sentiments.index + pd.Timedelta("4D")
-        # 分布データを取り込み
-        df_sentiments = pd.concat([cls.df_sentiment_dist, df_sentiments])
-
-        # センチメントから現金比率を算出
-        df_cash = cls.get_cash_ratio(df_sentiments)
 
         # 特徴量を作成
         print("[+] generate feature")
-        feats = feature_service.extract_feature()
+        features_dict = feature_service.extract_feature()
+        feats = features_dict["stock"]
+        df_sentiments = features_dict["sentiments"]
         feats.to_csv("new.csv")
+
+        # センチメントから現金比率を算出
+        df_cash = cls.get_cash_ratio(df_sentiments)
 
         # 結果を以下のcsv形式で出力する
         # 1列目:date
@@ -329,24 +274,6 @@ class ScoringService(object):
         df.to_csv(out, header=True, index=False, columns=output_columns)
 
         return out.getvalue()
-
-    @classmethod
-    def get_sentiment(cls, inputs, start_dt="2020-12-31"):
-        # ニュース見出しデータへのパスを指定
-        article_path = inputs["nikkei_article"]
-        target_feature_types = ["headline"]
-        df_sentiments = SentimentGenerator.generate_lstm_features(
-            article_path,
-            start_dt=start_dt,
-            target_feature_types=target_feature_types,
-        )["headline_features"]
-
-        df_sentiments.loc[:, "index"] = df_sentiments.index.map(
-            lambda x: cls.transform_yearweek_to_monday(x[0], x[1])
-        )
-        df_sentiments.set_index("index", inplace=True)
-        df_sentiments.rename(columns={0: "headline_m2_sentiment_0"}, inplace=True)
-        return df_sentiments
 
     @classmethod
     def get_cash_ratio(cls, df_sentiment):
