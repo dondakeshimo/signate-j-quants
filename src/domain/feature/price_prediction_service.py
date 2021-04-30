@@ -20,8 +20,8 @@ class PricePredictor(FeatureInterface):
         self._df = request.feature_df
         self.target_label: str = request.target_label
 
-    def load_data(self, path: str) -> None:
-        with open(path, "rb") as f:
+    def load_data(self, pkl_path: str) -> None:
+        with open(pkl_path, "rb") as f:
             self.model = pickle.load(f)
 
     def preprocess(self) -> None:

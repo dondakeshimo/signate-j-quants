@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass, field
 from .feature_interface import FeatureInterface
-from typing import List
+from typing import Dict, List
 import pandas as pd
 import numpy as np
 
@@ -24,7 +24,7 @@ class Stock(FeatureInterface):
         self._df: pd.DataFrame = None
         self.conf: StockConfig = config
 
-    def load_data(self, inputs: List[str]) -> None:
+    def load_data(self, inputs: Dict[str, str]) -> None:
         self.list_df = pd.read_csv(inputs["stock_list"])
         self.fin_df = pd.read_csv(inputs["stock_fin"])
         self.fin_price_df = pd.read_csv(inputs["stock_fin_price"])
