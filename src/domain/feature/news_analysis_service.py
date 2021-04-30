@@ -1,3 +1,5 @@
+"""チュートリアルのmodule.pyのコピー
+"""
 import math
 import os
 import unicodedata
