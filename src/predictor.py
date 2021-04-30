@@ -2,8 +2,8 @@
 import io
 
 import pandas as pd
-from usecases.feature.feature_stock_price_news_service import FeatureStockPriceNewsService
-from usecases.strategy.strategy_trend_service import StrategyTrendService
+from usecases.feature import *  # noqa:F401, F403
+from usecases.strategy import *  # noqa:F401, F403
 
 
 class ScoringService(object):
@@ -26,7 +26,8 @@ class ScoringService(object):
         return True
 
     @classmethod
-    def predict(cls, inputs):
+    def predict(cls, inputs, feature_service="chapter6_tutorial.Chapter6Tutorial",
+                strategy_service="strategy_trend_service.StrategyTrendService"):
         """Predict method
 
         Args:
@@ -34,16 +35,16 @@ class ScoringService(object):
         Returns:
             str: Inference for the given input.
         """
-        start_dt = cls._load_purchase_date(inputs)
+        start_dt = cls._load_purchase_date(inputs)  # noqa: F841
 
-        feature_service = FeatureStockPriceNewsService(inputs, cls.model_path, start_dt)
+        feature_service = eval(f"{feature_service}(inputs, cls.model_path, start_dt)")
         feature_service.preprocess()
 
         print("[+] generate feature")
-        features_dict = feature_service.extract_feature()
+        features_dict = feature_service.extract_feature()  # noqa: F841
 
-        strategy_service = StrategyTrendService(features_dict["stock"], features_dict["sentiments"],
-                                                features_dict["tdnet"])
+        strategy_service = eval(
+            f"{strategy_service}(features_dict['stock'], features_dict['sentiments'],features_dict['tdnet'])")
         strategy_service.decide_budget()
         strategy_service.select_code()
         df = strategy_service.df
