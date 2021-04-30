@@ -11,7 +11,6 @@ from abc import ABC, abstractmethod
 class StrategyService(ABC):
     """投資戦略の手順を記載するクラスの親クラス
     """
-
     @abstractmethod
     def select_code(self) -> None:
         pass

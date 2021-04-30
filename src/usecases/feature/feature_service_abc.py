@@ -11,7 +11,6 @@ from abc import ABC, abstractmethod
 class FeatureService(ABC):
     """特徴量抽出の手順を記載するクラスの親クラス
     """
-
     @abstractmethod
     def preprocess(self) -> None:
         pass

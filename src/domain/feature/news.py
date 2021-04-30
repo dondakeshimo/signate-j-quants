@@ -2,10 +2,12 @@
 """
 
 from dataclasses import dataclass, field
+from typing import Dict, List
+
+import pandas as pd
+
 from .feature_interface import FeatureInterface
 from .news_analysis_service import SentimentGenerator
-from typing import Dict, List
-import pandas as pd
 
 
 @dataclass
@@ -37,7 +39,10 @@ class News(FeatureInterface):
         pass
 
     def extract_feature(self) -> None:
-        self._df = pd.concat([self.analyzed_sentiments_df, self._analyze_sentiment(self.article_path)])
+        self._df = pd.concat([
+            self.analyzed_sentiments_df,
+            self._analyze_sentiment(self.article_path)
+        ])
 
     @property
     def df(self) -> pd.DataFrame:

@@ -2,10 +2,12 @@
 """
 
 from dataclasses import dataclass, field
-from .feature_interface import FeatureInterface
 from typing import Dict, List
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+
+from .feature_interface import FeatureInterface
 
 FRIDAY = 4
 
@@ -31,7 +33,8 @@ class Stock(FeatureInterface):
 
         # NOTE: コピー要るかわからないけどチュートリアルを踏襲
         stock_list = self.list_df.copy()
-        self._codes = stock_list[stock_list["universe_comp2"] == True]["Local Code"].values
+        self._codes = stock_list[stock_list["universe_comp2"] ==
+                                 True]["Local Code"].values
 
     def preprocess(self) -> None:
         self._set_date_index_all_df()
@@ -54,14 +57,14 @@ class Stock(FeatureInterface):
     def get_fundamental_columns(self) -> List[str]:
         fundamental_cols = self.fin_df.select_dtypes("float64").columns
         fundamental_cols = fundamental_cols[
-            fundamental_cols != "Result_Dividend DividendPayableDate"
-        ]
+            fundamental_cols != "Result_Dividend DividendPayableDate"]
         fundamental_cols = fundamental_cols[fundamental_cols != "Local Code"]
         return list(fundamental_cols)
 
     def get_technical_columns(self) -> List[str]:
         technical_cols = [
-            x for x in self._df if (x not in self.get_fundamental_columns()) and (x != "code")
+            x for x in self._df
+            if (x not in self.get_fundamental_columns()) and (x != "code")
         ]
         return list(technical_cols)
 
@@ -83,12 +86,15 @@ class Stock(FeatureInterface):
         return np.log(df[self.conf.quote_column]).diff().rolling(n).std()
 
     def _calc_ma_gap(self, df: pd.DataFrame, n: int) -> pd.DataFrame:
-        return df[self.conf.quote_column] / df[self.conf.quote_column].rolling(n).mean()
+        return df[self.conf.quote_column] / df[self.conf.quote_column].rolling(
+            n).mean()
 
     def _extract_feature_by_code(self, code: int) -> pd.DataFrame:
         feats = self.fin_price_df[self.fin_price_df["Local Code"] == code]
-        feats = feats.loc[pd.Timestamp(self.conf.start_dt) - pd.offsets.BDay(self.conf.buffer_day):]
-        feats = feats.loc[:, self.conf.fin_columns + [self.conf.quote_column]].copy()
+        feats = feats.loc[pd.Timestamp(self.conf.start_dt) -
+                          pd.offsets.BDay(self.conf.buffer_day):]
+        feats = feats.loc[:, self.conf.fin_columns +
+                          [self.conf.quote_column]].copy()
         feats = feats.fillna(0)
 
         # HACK: column order unified

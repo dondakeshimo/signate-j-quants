@@ -3,23 +3,23 @@
 次のstrategyを思いついたタイミングで抽象化を行う
 """
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from scipy.stats import zscore
 
 
 class Trend:
-
     def get_exclude(
-        cls,
-        df_tdnet,  # tdnetのデータ
-        start_dt=None,  # データ取得対象の開始日、Noneの場合は制限なし
-        end_dt=None,  # データ取得対象の終了日、Noneの場合は制限なし
-        lookback=7,  # 除外考慮期間 (days)
-        target_day_of_week=4,  # 起点となる曜日
+            cls,
+            df_tdnet,  # tdnetのデータ
+            start_dt=None,  # データ取得対象の開始日、Noneの場合は制限なし
+            end_dt=None,  # データ取得対象の終了日、Noneの場合は制限なし
+            lookback=7,  # 除外考慮期間 (days)
+            target_day_of_week=4,  # 起点となる曜日
     ):
         # 特別損失のレコードを取得
-        special_loss = df_tdnet[df_tdnet["disclosureItems"].str.contains('201"')].copy()
+        special_loss = df_tdnet[df_tdnet["disclosureItems"].str.contains(
+            '201"')].copy()
         # 日付型を調整
         special_loss["date"] = pd.to_datetime(special_loss["disclosedDate"])
         # 処理対象開始日が設定されていない場合はデータの最初の日付を取得
@@ -29,16 +29,16 @@ class Trend:
         if end_dt is None:
             end_dt = special_loss["date"].iloc[-1]
         #  処理対象日で絞り込み
-        special_loss = special_loss[
-            (start_dt <= special_loss["date"]) & (special_loss["date"] <= end_dt)
-        ]
+        special_loss = special_loss[(start_dt <= special_loss["date"])
+                                    & (special_loss["date"] <= end_dt)]
         # 出力用にカラムを調整
         res = special_loss[["code", "disclosedDate", "date"]].copy()
         # 銘柄コードを4桁にする
         res["code"] = res["code"].astype(str).str[:-1]
         # 予測の基準となる金曜日の日付にするために調整
         res["remain"] = (target_day_of_week - res["date"].dt.dayofweek) % 7
-        res["start_dt"] = res["date"] + pd.to_timedelta(res["remain"], unit="d")
+        res["start_dt"] = res["date"] + pd.to_timedelta(res["remain"],
+                                                        unit="d")
         res["end_dt"] = res["start_dt"] + pd.Timedelta(days=lookback)
         # 出力するカラムを指定
         columns = ["code", "date", "start_dt", "end_dt"]
@@ -49,7 +49,10 @@ class Trend:
         # 銘柄選択方法選択
         if strategy_id in [1, 4]:
             # 最高値モデル +　最安値モデル
-            df.loc[:, "pred"] = df.loc[:, "label_high_20"] + df.loc[:, "label_low_20"]
+            df.loc[:,
+                   "pred"] = df.loc[:,
+                                    "label_high_20"] + df.loc[:,
+                                                              "label_low_20"]
         elif strategy_id in [2, 5]:
             # 最高値モデル
             df.loc[:, "pred"] = df.loc[:, "label_high_20"]
@@ -65,29 +68,21 @@ class Trend:
             df_exclude = cls.get_exclude(df_tdnet)
             # 除外用にユニークな列を作成します。
             df_exclude.loc[:, "date-code_lastweek"] = (
-                df_exclude.loc[:, "start_dt"].dt.strftime("%Y-%m-%d-") + df_exclude.loc[:, "code"]
-            )
+                df_exclude.loc[:, "start_dt"].dt.strftime("%Y-%m-%d-") +
+                df_exclude.loc[:, "code"])
             df_exclude.loc[:, "date-code_thisweek"] = (
-                df_exclude.loc[:, "end_dt"].dt.strftime("%Y-%m-%d-") + df_exclude.loc[:, "code"]
-            )
+                df_exclude.loc[:, "end_dt"].dt.strftime("%Y-%m-%d-") +
+                df_exclude.loc[:, "code"])
             #
-            df.loc[:, "date-code_lastweek"] = (df.index - pd.Timedelta("7D")).strftime(
-                "%Y-%m-%d-"
-            ) + df.loc[:, "code"].astype(str)
-            df.loc[:, "date-code_thisweek"] = df.index.strftime("%Y-%m-%d-") + df.loc[
-                :, "code"
-            ].astype(str)
+            df.loc[:, "date-code_lastweek"] = (df.index - pd.Timedelta(
+                "7D")).strftime("%Y-%m-%d-") + df.loc[:, "code"].astype(str)
+            df.loc[:, "date-code_thisweek"] = df.index.strftime(
+                "%Y-%m-%d-") + df.loc[:, "code"].astype(str)
             # 特別損失銘柄を除外
-            df = df.loc[
-                ~df.loc[:, "date-code_lastweek"].isin(
-                    df_exclude.loc[:, "date-code_lastweek"]
-                )
-            ]
-            df = df.loc[
-                ~df.loc[:, "date-code_thisweek"].isin(
-                    df_exclude.loc[:, "date-code_thisweek"]
-                )
-            ]
+            df = df.loc[~df.loc[:, "date-code_lastweek"].
+                        isin(df_exclude.loc[:, "date-code_lastweek"])]
+            df = df.loc[~df.loc[:, "date-code_thisweek"].
+                        isin(df_exclude.loc[:, "date-code_thisweek"])]
 
         # 予測出力を降順に並び替え
         df = df.sort_values("pred", ascending=False)
@@ -116,13 +111,11 @@ class Trend:
         df_sentiment = df_sentiment.copy()
         # headline_m2_sentiment_0の値が高いほどポジティブなので符号反転させる
         sentiment_dist = sorted(
-            df_sentiment.loc[
-                DIST_START_DT:DIST_END_DT, "headline_m2_sentiment_0"
-            ].values * -1
-        )
+            df_sentiment.loc[DIST_START_DT:DIST_END_DT,
+                             "headline_m2_sentiment_0"].values * -1)
         sentiment_use = (
-            df_sentiment.loc[USE_START_DT:, "headline_m2_sentiment_0"].values * -1
-        )
+            df_sentiment.loc[USE_START_DT:, "headline_m2_sentiment_0"].values *
+            -1)
 
         # DIST_START_DT:DIST_END_DTの分布を使用してリスク判定する
         z = zscore(sentiment_dist)

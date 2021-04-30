@@ -2,8 +2,10 @@
 """
 
 import pandas as pd
-from .strategy_service_abc import StrategyService
+
 from domain.strategy.trend import Trend
+
+from .strategy_service_abc import StrategyService
 
 
 class StrategyTrendService(StrategyService):
@@ -36,7 +38,8 @@ class StrategyTrendService(StrategyService):
 
     def select_code(self) -> None:
         strategy_id = 5  # tutorial参照
-        self._df = self.strategy.select_code(strategy_id, self._df, self.tdnet_df)
+        self._df = self.strategy.select_code(strategy_id, self._df,
+                                             self.tdnet_df)
 
     def adjust_ratio(self) -> None:
         pass
