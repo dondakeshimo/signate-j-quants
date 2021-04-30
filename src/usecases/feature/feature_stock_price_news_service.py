@@ -6,6 +6,7 @@ from .feature_service_abc import FeatureService
 from domain.feature.stock import Stock, StockConfig
 from domain.feature.price_prediction_service import PricePredictionRequest, PricePredictor
 from domain.feature.news import News, NewsConfig
+from domain.feature.tdnet import Tdnet
 
 
 class FeatureStockPriceNewsService(FeatureService):
@@ -50,6 +51,9 @@ class FeatureStockPriceNewsService(FeatureService):
         self.news = News(news_config)
         self.news.load_data(inputs)
 
+        self.tdnet = Tdnet()
+        self.tdnet.load_data(inputs)
+
     def preprocess(self):
         self.stock.preprocess()
 
@@ -74,7 +78,7 @@ class FeatureStockPriceNewsService(FeatureService):
 
         self.news.extract_feature()
 
-        return {"stock": stock_df, "sentiments": self.news.df}
+        return {"stock": stock_df, "sentiments": self.news.df, "tdnet": self.tdnet.df}
 
     def get_codes(self):
         return self.stock.codes

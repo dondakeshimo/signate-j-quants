@@ -8,12 +8,11 @@ from domain.strategy.trend import Trend
 
 class StrategyTrendService(StrategyService):
     def __init__(self, stock_df: pd.DataFrame, sentiments_df: pd.DataFrame,
-                 tdnet_df: pd.DataFrame, strategy_id: int) -> None:
+                 tdnet_df: pd.DataFrame) -> None:
         self._df = None
         self.stock_df = stock_df
         self.sentiments_df = sentiments_df
         self.tdnet_df = tdnet_df
-        self.strategy_id = strategy_id
         self.strategy = Trend()
 
     def decide_budget(self) -> None:
@@ -36,7 +35,8 @@ class StrategyTrendService(StrategyService):
             self._df.loc[self._df.index == s, "budget"] = cash
 
     def select_code(self) -> None:
-        self._df = self.strategy.select_code(self.strategy_id, self._df, self.tdnet_df)
+        strategy_id = 5  # tutorial参照
+        self._df = self.strategy.select_code(strategy_id, self._df, self.tdnet_df)
 
     def adjust_ratio(self) -> None:
         pass
