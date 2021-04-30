@@ -26,6 +26,7 @@ class Stock(FeatureInterface):
 
     def load_data(self, inputs: List[str]) -> None:
         self.list_df = pd.read_csv(inputs["stock_list"])
+        self.fin_df = pd.read_csv(inputs["stock_fin"])
         self.fin_price_df = pd.read_csv(inputs["stock_fin_price"])
 
         # NOTE: コピー要るかわからないけどチュートリアルを踏襲
@@ -50,11 +51,29 @@ class Stock(FeatureInterface):
     def codes(self) -> List[int]:
         return self._codes
 
+    def get_fundamental_columns(self) -> List[str]:
+        fundamental_cols = self.fin_df.select_dtypes("float64").columns
+        fundamental_cols = fundamental_cols[
+            fundamental_cols != "Result_Dividend DividendPayableDate"
+        ]
+        fundamental_cols = fundamental_cols[fundamental_cols != "Local Code"]
+        return list(fundamental_cols)
+
+    def get_technical_columns(self) -> List[str]:
+        technical_cols = [
+            x for x in self._df if (x not in self.get_fundamental_columns()) and (x != "code")
+        ]
+        return list(technical_cols)
+
+    def get_feature_columns(self) -> List[str]:
+        return self.get_fundamental_columns() + self.get_technical_columns()
+
     def _set_date_index(self, df: pd.DataFrame, column: str) -> None:
         df.loc[:, "datetime"] = pd.to_datetime(df.loc[:, column])
         df.set_index("datetime", inplace=True)
 
     def _set_date_index_all_df(self) -> None:
+        self._set_date_index(self.fin_df, "base_date")
         self._set_date_index(self.fin_price_df, "base_date")
 
     def _calc_return(self, df: pd.DataFrame, n: int) -> pd.DataFrame:
