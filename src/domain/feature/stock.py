@@ -6,6 +6,7 @@ from typing import Dict, List
 
 import numpy as np
 import pandas as pd
+import yaml
 
 from .feature_interface import FeatureInterface
 
@@ -19,6 +20,14 @@ class StockConfig:
     calc_days: List[int] = field(default_factory=list)
     start_dt: str = "2019-02-01"
     fin_columns: List[str] = field(default_factory=list)
+
+    def load_config(self, path: str):
+        with open(path, "r") as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        self.quote_column = config["quote_column"]
+        self.buffer_day = config["buffer_day"]
+        self.calc_days = config["calc_days"]
+        self.fin_columns = config["fin_columns"]
 
 
 class Stock(FeatureInterface):
