@@ -65,10 +65,10 @@ class Chapter6Tutorial(FeatureService):
         self.stock.extract_feature()
         stock_df = self.stock.df
         feature_columns = self.stock.get_feature_columns()
+        print(feature_columns)
 
         label = "label_high_20"
-        hith_price_req = PricePredictionRequest(label,
-                                                self.stock.df[feature_columns])
+        hith_price_req = PricePredictionRequest(label, self.stock.df)
         high_price_predictor = PricePredictor(hith_price_req)
         high_price_predictor.load_data(
             os.path.join(self.model_path, "my_model_label_high_20.pkl"))
@@ -76,8 +76,7 @@ class Chapter6Tutorial(FeatureService):
         stock_df[label] = high_price_predictor.df[label]
 
         label = "label_low_20"
-        low_price_req = PricePredictionRequest(label,
-                                               self.stock.df[feature_columns])
+        low_price_req = PricePredictionRequest(label, self.stock.df)
         low_price_predictor = PricePredictor(low_price_req)
         low_price_predictor.load_data(
             os.path.join(self.model_path, "my_model_label_low_20.pkl"))

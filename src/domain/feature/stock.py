@@ -97,12 +97,9 @@ class Stock(FeatureInterface):
                           [self.conf.quote_column]].copy()
         feats = feats.fillna(0)
 
-        # HACK: column order unified
         for i, d in enumerate(self.conf.calc_days, 1):
             feats[f"return_{i}month"] = self._calc_return(feats, d)
-        for i, d in enumerate(self.conf.calc_days, 1):
             feats[f"volatility_{i}month"] = self._calc_volatility(feats, d)
-        for i, d in enumerate(self.conf.calc_days, 1):
             feats[f"MA_gap_{i}month"] = self._calc_ma_gap(feats, d)
 
         feats = feats.fillna(0)
