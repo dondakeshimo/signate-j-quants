@@ -42,16 +42,10 @@ class PricePredictor(FeatureInterface):
             'Result_Dividend AnnualDividendPerShare',
             'Forecast_Dividend FiscalYear',
             'Forecast_Dividend QuarterlyDividendPerShare',
-            'Forecast_Dividend AnnualDividendPerShare',
-            'return_1month',
-            'return_2month',
-            'return_3month',
-            'volatility_1month',
-            'volatility_2month',
-            'volatility_3month',
-            'MA_gap_1month',
-            'MA_gap_2month',
-            'MA_gap_3month'
+            'Forecast_Dividend AnnualDividendPerShare', 'return_1month',
+            'return_2month', 'return_3month', 'volatility_1month',
+            'volatility_2month', 'volatility_3month', 'MA_gap_1month',
+            'MA_gap_2month', 'MA_gap_3month'
         ]
 
     def load_data(self, pkl_path: str) -> None:
