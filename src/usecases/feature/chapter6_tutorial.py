@@ -2,6 +2,7 @@
 """
 
 import os
+import pathlib
 
 from domain.feature.news import News, NewsConfig
 from domain.feature.price_prediction_service import (PricePredictionRequest,
@@ -19,8 +20,11 @@ class Chapter6Tutorial(FeatureService):
         inputs[
             "sentiment_dist"] = f"{model_path}/headline_features/LSTM_sentiment.pkl"
 
+        config_dir = pathlib.Path(__file__).parent.parent.parent / "config"
+        yaml_path = config_dir / "stock_base.yaml"
+
         stock_config = StockConfig()
-        stock_config.load_config("./src/config/stock_base.yaml")
+        stock_config.load_config(str(yaml_path.resolve()))
         stock_config.start_dt = start_dt
         self.stock = Stock(stock_config)
         self.stock.load_data(inputs)
