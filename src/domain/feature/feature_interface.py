@@ -10,8 +10,6 @@ import pandas as pd
 
 
 class FeatureInterface(ABC):
-    _df: pd.DataFrame
-
     @abstractmethod
     def load_data(self, path: List[str]) -> None:
         pass
@@ -21,9 +19,5 @@ class FeatureInterface(ABC):
         pass
 
     @abstractmethod
-    def extract_feature(self) -> None:
+    def extract_feature(self) -> pd.DataFrame:
         pass
-
-    @property
-    def df(self) -> pd.DataFrame:
-        return self._df

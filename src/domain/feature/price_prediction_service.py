@@ -12,15 +12,13 @@ from .feature_interface import FeatureInterface
 
 
 @dataclass
-class PricePredictionRequest:
+class PricePredictionConfig:
     target_label: str
-    feature_df: pd.DataFrame
 
 
 class PricePredictor(FeatureInterface):
-    def __init__(self, request: PricePredictionRequest) -> None:
-        self._df = request.feature_df
-        self.target_label: str = request.target_label
+    def __init__(self, config: PricePredictionConfig) -> None:
+        self.target_label: str = config.target_label
         self.feature_columns = [
             'Result_FinancialStatement FiscalYear',
             'Result_FinancialStatement NetSales',
@@ -55,10 +53,7 @@ class PricePredictor(FeatureInterface):
     def preprocess(self) -> None:
         pass
 
-    def extract_feature(self) -> None:
-        self._df = self._df.reindex(columns=self.feature_columns)
-        self._df[self.target_label] = self.model.predict(self._df)
-
-    @property
-    def df(self) -> pd.DataFrame:
-        return self._df
+    def extract_feature(self, stock_df: pd.DataFrame) -> pd.DataFrame:
+        stock_df = stock_df.reindex(columns=self.feature_columns)
+        stock_df[self.target_label] = self.model.predict(stock_df)
+        return stock_df

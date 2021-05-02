@@ -4,8 +4,11 @@
 import os
 import pathlib
 
+from typing import Dict
+import pandas as pd
+
 from domain.feature.news import News, NewsConfig
-from domain.feature.price_prediction_service import (PricePredictionRequest,
+from domain.feature.price_prediction_service import (PricePredictionConfig,
                                                      PricePredictor)
 from domain.feature.stock import Stock, StockConfig
 from domain.feature.tdnet import Tdnet
@@ -14,7 +17,7 @@ from .feature_service_abc import FeatureService
 
 
 class Chapter6Tutorial(FeatureService):
-    def __init__(self, inputs, model_path, start_dt):
+    def __init__(self, inputs, model_path, start_dt) -> None:
         self.model_path = model_path
         inputs["model_path"] = model_path
         inputs[
@@ -36,35 +39,33 @@ class Chapter6Tutorial(FeatureService):
         self.tdnet = Tdnet()
         self.tdnet.load_data(inputs)
 
-    def preprocess(self):
+        self.high_label = "label_high_20"
+        hith_price_conf = PricePredictionConfig(self.high_label)
+        self.high_price_predictor = PricePredictor(hith_price_conf)
+        self.high_price_predictor.load_data(
+            os.path.join(self.model_path, "my_model_label_high_20.pkl"))
+
+        self.low_label = "label_low_20"
+        low_price_conf = PricePredictionConfig(self.low_label)
+        self.low_price_predictor = PricePredictor(low_price_conf)
+        self.low_price_predictor.load_data(
+            os.path.join(self.model_path, "my_model_label_low_20.pkl"))
+
+    def preprocess(self) -> None:
         self.stock.preprocess()
 
-    def extract_feature(self):
-        self.stock.extract_feature()
-        stock_df = self.stock.df
+    def extract_feature(self) -> Dict[str, pd.DataFrame]:
+        stock_df = self.stock.extract_feature()
+        stock_df[self.high_label] = self.high_price_predictor.extract_feature(stock_df)[self.high_label]
+        stock_df[self.low_label] = self.low_price_predictor.extract_feature(stock_df)[self.low_label]
 
-        label = "label_high_20"
-        hith_price_req = PricePredictionRequest(label, self.stock.df)
-        high_price_predictor = PricePredictor(hith_price_req)
-        high_price_predictor.load_data(
-            os.path.join(self.model_path, "my_model_label_high_20.pkl"))
-        high_price_predictor.extract_feature()
-        stock_df[label] = high_price_predictor.df[label]
-
-        label = "label_low_20"
-        low_price_req = PricePredictionRequest(label, self.stock.df)
-        low_price_predictor = PricePredictor(low_price_req)
-        low_price_predictor.load_data(
-            os.path.join(self.model_path, "my_model_label_low_20.pkl"))
-        low_price_predictor.extract_feature()
-        stock_df[label] = low_price_predictor.df[label]
-
-        self.news.extract_feature()
+        news_df = self.news.extract_feature()
+        tdnet_df = self.tdnet.extract_feature()
 
         return {
             "stock": stock_df,
-            "sentiments": self.news.df,
-            "tdnet": self.tdnet.df
+            "sentiments": news_df,
+            "tdnet": tdnet_df,
         }
 
     def get_codes(self):

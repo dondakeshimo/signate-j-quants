@@ -6,6 +6,7 @@
 """
 
 from abc import ABC, abstractmethod
+import pandas as pd
 
 
 class FeatureService(ABC):
@@ -16,5 +17,5 @@ class FeatureService(ABC):
         pass
 
     @abstractmethod
-    def extract_feature(self) -> None:
+    def extract_feature(self) -> pd.DataFrame:
         pass

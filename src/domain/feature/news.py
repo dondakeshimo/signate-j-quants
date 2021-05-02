@@ -18,8 +18,6 @@ class NewsConfig:
 
 
 class News(FeatureInterface):
-    DIST_END_DT = "2020-09-25"
-
     def __init__(self, config: NewsConfig) -> None:
         self._df: pd.DataFrame = None
         self.conf: NewsConfig = config
@@ -38,14 +36,11 @@ class News(FeatureInterface):
     def preprocess(self) -> None:
         pass
 
-    def extract_feature(self) -> None:
+    def extract_feature(self) -> pd.DataFrame:
         self._df = pd.concat([
             self.analyzed_sentiments_df,
             self._analyze_sentiment(self.article_path)
         ])
-
-    @property
-    def df(self) -> pd.DataFrame:
         return self._df
 
     def _analyze_sentiment(self, article_path: str) -> pd.DataFrame:

@@ -48,15 +48,12 @@ class Stock(FeatureInterface):
     def preprocess(self) -> None:
         self._set_date_index_all_df()
 
-    def extract_feature(self) -> None:
+    def extract_feature(self) -> pd.DataFrame:
         buff = []
         for code in self.codes:
             buff.append(self._extract_feature_by_code(code))
 
         self._df = pd.concat(buff)
-
-    @property
-    def df(self) -> pd.DataFrame:
         return self._df
 
     @property

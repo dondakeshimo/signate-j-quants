@@ -12,12 +12,8 @@ class Tdnet(FeatureInterface):
     def load_data(self, inputs: Dict[str, str]) -> None:
         self._df = pd.read_csv(inputs["tdnet"])
 
-    def preprocess(self):
+    def preprocess(self) -> None:
         pass
 
-    def extract_feature(self):
-        pass
-
-    @property
-    def df(self) -> pd.DataFrame:
+    def extract_feature(self) -> pd.DataFrame:
         return self._df

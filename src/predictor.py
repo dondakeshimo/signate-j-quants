@@ -44,8 +44,6 @@ class ScoringService(object):
         feature_service = eval(
             f"{feature_service}(inputs, cls.model_path, start_dt)")
         feature_service.preprocess()
-
-        print("[+] generate feature")
         features_dict = feature_service.extract_feature()  # noqa: F841
 
         strategy_service = eval(
