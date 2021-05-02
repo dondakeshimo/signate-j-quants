@@ -16,7 +16,10 @@ class CodeSelector(CodeSelectorABC):
         # 銘柄選択方法選択
         if strategy_id in [1, 4]:
             # 最高値モデル + 最安値モデル
-            df.loc[:, "pred"] = df.loc[:, "label_high_20"] + df.loc[:, "label_low_20"]
+            df.loc[:,
+                   "pred"] = df.loc[:,
+                                    "label_high_20"] + df.loc[:,
+                                                              "label_low_20"]
         elif strategy_id in [2, 5]:
             # 最高値モデル
             df.loc[:, "pred"] = df.loc[:, "label_high_20"]

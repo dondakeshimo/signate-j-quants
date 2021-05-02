@@ -12,8 +12,8 @@ class BudgetAdjustor(BudgetAdjustorABC):
     def adjust(self, request: BudgetAdjustorRequest) -> None:
         """stock_dfにbudgetカラムを追加する
         """
-        cash_df = self._calc_risk(request.sentiments_df, request.dist_start_dt, request.dist_end_dt,
-                                  request.use_start_dt)
+        cash_df = self._calc_risk(request.sentiments_df, request.dist_start_dt,
+                                  request.dist_end_dt, request.use_start_dt)
         df = request.stock_df.copy()
 
         cash = 50000
@@ -32,14 +32,17 @@ class BudgetAdjustor(BudgetAdjustorABC):
 
         return df
 
-    def _calc_risk(self, sentiments_df: pd.DataFrame, dist_start_dt: str, dist_end_dt: str,
-                   use_start_dt: str) -> pd.DataFrame:
+    def _calc_risk(self, sentiments_df: pd.DataFrame, dist_start_dt: str,
+                   dist_end_dt: str, use_start_dt: str) -> pd.DataFrame:
         """リクエストのsentiments_dfにriskカラムを追加して返す
         """
         # headline_m2_sentiment_0の値が高いほどポジティブなので符号反転させる
         sentiment_dist = sorted(
-            sentiments_df.loc[dist_start_dt:dist_end_dt, "headline_m2_sentiment_0"].values * -1)
-        sentiment_use = (sentiments_df.loc[use_start_dt:, "headline_m2_sentiment_0"].values * -1)
+            sentiments_df.loc[dist_start_dt:dist_end_dt,
+                              "headline_m2_sentiment_0"].values * -1)
+        sentiment_use = (sentiments_df.loc[use_start_dt:,
+                                           "headline_m2_sentiment_0"].values *
+                         -1)
 
         # DIST_START_DT:DIST_END_DTの分布を使用してリスク判定する
         z = zscore(sentiment_dist)

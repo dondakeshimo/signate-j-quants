@@ -3,9 +3,12 @@
 
 import pandas as pd
 
-from domain.strategy.budget_adjustment.budget_adjustor_interface import BudgetAdjustorRequest
-from domain.strategy.budget_adjustment.considering_sentiment_risk import BudgetAdjustor
-from domain.strategy.code_selection.code_selector_interface import CodeSelectorRequest
+from domain.strategy.budget_adjustment.budget_adjustor_interface import \
+    BudgetAdjustorRequest
+from domain.strategy.budget_adjustment.considering_sentiment_risk import \
+    BudgetAdjustor
+from domain.strategy.code_selection.code_selector_interface import \
+    CodeSelectorRequest
 from domain.strategy.code_selection.trend import CodeSelector
 
 from .strategy_service_abc import StrategyService

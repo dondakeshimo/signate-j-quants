@@ -3,8 +3,8 @@
 
 import os
 import pathlib
-
 from typing import Dict
+
 import pandas as pd
 
 from domain.feature.news import News, NewsConfig
@@ -56,8 +56,10 @@ class Chapter6Tutorial(FeatureService):
 
     def extract_feature(self) -> Dict[str, pd.DataFrame]:
         stock_df = self.stock.extract_feature()
-        stock_df[self.high_label] = self.high_price_predictor.extract_feature(stock_df)[self.high_label]
-        stock_df[self.low_label] = self.low_price_predictor.extract_feature(stock_df)[self.low_label]
+        stock_df[self.high_label] = self.high_price_predictor.extract_feature(
+            stock_df)[self.high_label]
+        stock_df[self.low_label] = self.low_price_predictor.extract_feature(
+            stock_df)[self.low_label]
 
         news_df = self.news.extract_feature()
         tdnet_df = self.tdnet.extract_feature()

@@ -1,8 +1,8 @@
 """budget_adjustmentモジュールのクラスのインタフェースを規定する
 """
 
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 
 import pandas as pd
 
