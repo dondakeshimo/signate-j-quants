@@ -7,14 +7,12 @@
 
 from abc import ABC, abstractmethod
 
+import pandas as pd
+
 
 class StrategyService(ABC):
     """投資戦略の手順を記載するクラスの親クラス
     """
     @abstractmethod
-    def select_code(self) -> None:
-        pass
-
-    @abstractmethod
-    def adjust_ratio(self) -> None:
+    def execute(self) -> pd.DataFrame:
         pass

@@ -3,7 +3,10 @@
 
 import pandas as pd
 
-from domain.strategy.trend import Trend
+from domain.strategy.budget_adjustment.budget_adjustor_interface import BudgetAdjustorRequest
+from domain.strategy.budget_adjustment.considering_sentiment_risk import BudgetAdjustor
+from domain.strategy.code_selection.code_selector_interface import CodeSelectorRequest
+from domain.strategy.code_selection.trend import CodeSelector
 
 from .strategy_service_abc import StrategyService
 
@@ -15,35 +18,12 @@ class StrategyTrendService(StrategyService):
         self.stock_df = stock_df
         self.sentiments_df = sentiments_df
         self.tdnet_df = tdnet_df
-        self.strategy = Trend()
+        self.code_selector = CodeSelector()
+        self.budget_adjustor = BudgetAdjustor()
 
-    def decide_budget(self) -> None:
-        cash_df = self.strategy.get_cash_ratio(self.sentiments_df)
-        decision_columns = ["code", "label_high_20", "label_low_20"]
-        self._df = self.stock_df.loc[:, decision_columns].copy()
+    def execute(self) -> pd.DataFrame:
+        ba_req = BudgetAdjustorRequest(self.stock_df, self.sentiments_df)
+        df = self.budget_adjustor.adjust(ba_req)
 
-        cash = 50000
-        self._df.loc[:, "budget"] = cash
-        for s in cash_df.index:
-            t = cash_df.loc[cash_df.index == s, "risk"][0]
-            if t == 10:
-                cash = 40000
-            elif t == 20:
-                cash = 30000
-            elif t == 30:
-                cash = 20000
-            else:
-                cash = 50000
-            self._df.loc[self._df.index == s, "budget"] = cash
-
-    def select_code(self) -> None:
-        strategy_id = 5  # tutorial参照
-        self._df = self.strategy.select_code(strategy_id, self._df,
-                                             self.tdnet_df)
-
-    def adjust_ratio(self) -> None:
-        pass
-
-    @property
-    def df(self) -> pd.DataFrame:
-        return self._df
+        cs_req = CodeSelectorRequest(stock_df=df, tdnet_df=self.tdnet_df)
+        return self.code_selector.select(cs_req)
