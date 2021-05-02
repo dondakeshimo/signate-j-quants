@@ -51,9 +51,7 @@ class ScoringService(object):
         strategy_service = eval(
             f"{strategy_service}(features_dict['stock'], features_dict['sentiments'],features_dict['tdnet'])"
         )
-        strategy_service.decide_budget()
-        strategy_service.select_code()
-        df = strategy_service.df
+        df = strategy_service.execute()
 
         # 日付順に並び替え
         df.sort_index(kind="mergesort", inplace=True)
