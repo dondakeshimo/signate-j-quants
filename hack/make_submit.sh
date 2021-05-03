@@ -7,8 +7,8 @@ cd `dirname $0`/../
 SUBMIT_NAME=${1:-submit.zip}
 TMP_DIR=tmp
 
-# tmpディレクトリがなければ作る
-if [ ! -d $TMP_DIR ]; then mkdir $TMP_DIR; fi
+rm -rf tmp
+mkdir tmp
 
 # 対象をコピー
 cp -r model $TMP_DIR/
