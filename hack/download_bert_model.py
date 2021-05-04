@@ -3,7 +3,7 @@
 import sys
 sys.path.append("./src")
 
-from module import SentimentGenerator
+from domain.feature.news_analysis_service import SentimentGenerator
 
 model_path = "./model"
 
