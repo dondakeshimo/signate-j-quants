@@ -1,4 +1,7 @@
 from predictor import ScoringService
+from pypfopt import expected_returns
+from pypfopt import risk_models
+from pypfopt.efficient_frontier import EfficientFrontier
 
 dataset_dir = "./data"
 model_path = "./model"
