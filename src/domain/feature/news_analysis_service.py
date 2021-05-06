@@ -718,20 +718,25 @@ class SentimentGenerator(object):
     def build_weekly_labels(cls, stock_price, boundary_week):
         def _compute_weekly_return(x):
             # その週の初営業日のopenから最終営業日のcloseまでのリターンを計算する。
-            weekly_return = ((x['close'].iloc[-1] - x['open'].iloc[0]) / x['open'].iloc[0])
+            weekly_return = ((x['close'].iloc[-1] - x['open'].iloc[0]) /
+                             x['open'].iloc[0])
 
             # その日のvolumneが0であるデータは、openが0となっている。
             # openが0の場合、np.infの値となっているため、np.nanに変換し除去する。
             # 銘柄ごとのリターンを単純平均し、marketのweekly_returnを計算する。
-            return weekly_return.replace([np.inf, -np.inf], np.nan).dropna().mean()
+            return weekly_return.replace([np.inf, -np.inf],
+                                         np.nan).dropna().mean()
 
         assert isinstance(boundary_week, tuple)
 
         weekly_group = cls._build_weekly_group(df=stock_price)
-        weekly_fwd_return = stock_price.groupby(weekly_group).apply(_compute_weekly_return).shift(-1).dropna()
+        weekly_fwd_return = stock_price.groupby(weekly_group).apply(
+            _compute_weekly_return).shift(-1).dropna()
 
-        train_labels = weekly_fwd_return[weekly_fwd_return.index <= boundary_week]
-        test_labels = weekly_fwd_return[weekly_fwd_return.index > boundary_week]
+        train_labels = weekly_fwd_return[
+            weekly_fwd_return.index <= boundary_week]
+        test_labels = weekly_fwd_return[
+            weekly_fwd_return.index > boundary_week]
 
         train_labels = (train_labels >= 0) * 1.0
         test_labels = (test_labels >= 0) * 1.0
