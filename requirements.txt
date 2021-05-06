@@ -10,3 +10,4 @@ torchvision==0.8.2
 transformers==4.2.2
 yapf==0.31.0
 isort==5.8.0
+PyPortfolioOpt
