@@ -10,7 +10,17 @@ from .price_predictor_interface import PricePredictorInterface
 
 class LGBMPricePredictor(PricePredictorInterface):
     def __init__(self):
-        self.regressor = lightgbm.LGBMRegressor()
+        default_params = {
+            "objective": "regression",
+            "seed": 0,
+            "verbose": 10,
+            "num_leaves": 31,
+            "min_child_samples": 10,
+            "num_iterations": 100,
+            "boosting_type": "gbdt",
+            "metrics": "rmse",
+            "learning_rate": 0.1,
+        }
         self.feature_columns = [
             'Result_FinancialStatement FiscalYear',
             'Result_FinancialStatement NetSales',
@@ -37,6 +47,7 @@ class LGBMPricePredictor(PricePredictorInterface):
             'volatility_2month', 'volatility_3month', 'MA_gap_1month',
             'MA_gap_2month', 'MA_gap_3month'
         ]
+        self.regressor = lightgbm.LGBMRegressor(**default_params)
 
     def fit(self, train_X: pd.DataFrame, train_y: pd.DataFrame) -> None:
         train_X = train_X.reindex(columns=self.feature_columns)
