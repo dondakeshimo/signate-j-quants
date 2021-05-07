@@ -1,13 +1,15 @@
+import argparse
 import pathlib
 from domain.feature.stock import Stock, StockConfig
-from domain.feature.lgbm_price_predictor import LGBMPricePredictor
 from domain.feature.rf_price_predictor import RFPricePredictor
 
 
-dataset_dir = "./data"
-model_path = "./model"
+DATASET_DIR = "./data"
+MODEL_PATH = "./model"
 output_path = "."
 
+# 訓練期間開始日
+TRAIN_START = "2016-01-04"
 # 訓練期間終了日
 TRAIN_END = "2018-12-31"
 # 評価期間開始日
@@ -19,42 +21,56 @@ TEST_START = "2020-01-01"
 # 目的変数
 TARGET_LABEL = "label_high_20"
 
-inputs = {
-    "stock_list": f"{dataset_dir}/stock_list.csv.gz",
-    "stock_price": f"{dataset_dir}/stock_price.csv.gz",
-    "stock_fin": f"{dataset_dir}/stock_fin.csv.gz",
-    "stock_fin_price": f"{dataset_dir}/stock_fin_price.csv.gz",
+INPUTS = {
+    "stock_list": f"{DATASET_DIR}/stock_list.csv.gz",
+    "stock_price": f"{DATASET_DIR}/stock_price.csv.gz",
+    "stock_fin": f"{DATASET_DIR}/stock_fin.csv.gz",
+    "stock_fin_price": f"{DATASET_DIR}/stock_fin_price.csv.gz",
     # ニュースデータ
-    "tdnet": f"{dataset_dir}/tdnet.csv.gz",
-    "disclosureItems": f"{dataset_dir}/disclosureItems.csv.gz",
-    "nikkei_article": f"{dataset_dir}/nikkei_article.csv.gz",
-    "article": f"{dataset_dir}/article.csv.gz",
-    "industry": f"{dataset_dir}/industry.csv.gz",
-    "industry2": f"{dataset_dir}/industry2.csv.gz",
-    "region": f"{dataset_dir}/region.csv.gz",
-    "theme": f"{dataset_dir}/theme.csv.gz",
+    "tdnet": f"{DATASET_DIR}/tdnet.csv.gz",
+    "disclosureItems": f"{DATASET_DIR}/disclosureItems.csv.gz",
+    "nikkei_article": f"{DATASET_DIR}/nikkei_article.csv.gz",
+    "article": f"{DATASET_DIR}/article.csv.gz",
+    "industry": f"{DATASET_DIR}/industry.csv.gz",
+    "industry2": f"{DATASET_DIR}/industry2.csv.gz",
+    "region": f"{DATASET_DIR}/region.csv.gz",
+    "theme": f"{DATASET_DIR}/theme.csv.gz",
     # 目的変数データ
-    "stock_labels": f"{dataset_dir}/stock_labels.csv.gz",
+    "stock_labels": f"{DATASET_DIR}/stock_labels.csv.gz",
     # 購入日指定データ
-    "purchase_date": f"{dataset_dir}/purchase_date.csv"
+    "purchase_date": f"{DATASET_DIR}/purchase_date.csv",
+    "model_path": MODEL_PATH,
 }
 
-inputs["model_path"] = model_path
 
-config_dir = pathlib.Path(__file__).parent / "config"
-yaml_path = config_dir / "stock_base.yaml"
+def main(args: argparse.Namespace) -> None:
+    config_dir = pathlib.Path(__file__).parent / "config"
+    yaml_path = config_dir / "stock_base.yaml"
 
-stock_config = StockConfig()
-stock_config.load_config(str(yaml_path.resolve()))
-stock_config.start_dt = "2016-01-04"
-stock = Stock(stock_config)
-stock.load_data(inputs)
+    stock_config = StockConfig()
+    stock_config.load_config(str(yaml_path.resolve()))
+    stock_config.start_dt = TRAIN_START
+    stock = Stock(stock_config)
+    stock.load_data(INPUTS)
 
-stock.preprocess()
+    stock.preprocess()
 
-train_X, train_y, _, _, _, _ = stock.get_features_and_label(
-    TARGET_LABEL, TRAIN_END, VAL_START, VAL_END, TEST_START)
+    train_X, train_y, _, _, _, _ = stock.get_features_and_label(
+        TARGET_LABEL, TRAIN_END, VAL_START, VAL_END, TEST_START)
 
-predictor = RFPricePredictor()
-predictor.fit(train_X, train_y)
-predictor.save_model(f"{model_path}/rf_label_high_20.pkl")
+    predictor = RFPricePredictor()
+    predictor.fit(train_X, train_y)
+    predictor.save_model(f"{MODEL_PATH}/{args.model_filename}")
+
+
+def get_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("model_filename")
+    parser.add_argument("--config_path")
+    return parser
+
+
+if __name__ == "__main__":
+    parser = get_parser()
+    args = parser.parse_args()
+    main(args)

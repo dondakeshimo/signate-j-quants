@@ -1,32 +1,50 @@
+import argparse
 from predictor import ScoringService
 
-dataset_dir = "./data"
-model_path = "./model"
-output_path = "."
-
-inputs = {
-    "stock_list": f"{dataset_dir}/stock_list.csv.gz",
-    "stock_price": f"{dataset_dir}/stock_price.csv.gz",
-    "stock_fin": f"{dataset_dir}/stock_fin.csv.gz",
-    "stock_fin_price": f"{dataset_dir}/stock_fin_price.csv.gz",
+DATASET_DIR = "./data"
+MODEL_PATH = "./model"
+INPUTS = {
+    "stock_list": f"{DATASET_DIR}/stock_list.csv.gz",
+    "stock_price": f"{DATASET_DIR}/stock_price.csv.gz",
+    "stock_fin": f"{DATASET_DIR}/stock_fin.csv.gz",
+    "stock_fin_price": f"{DATASET_DIR}/stock_fin_price.csv.gz",
     # ニュースデータ
-    "tdnet": f"{dataset_dir}/tdnet.csv.gz",
-    "disclosureItems": f"{dataset_dir}/disclosureItems.csv.gz",
-    "nikkei_article": f"{dataset_dir}/nikkei_article.csv.gz",
-    "article": f"{dataset_dir}/article.csv.gz",
-    "industry": f"{dataset_dir}/industry.csv.gz",
-    "industry2": f"{dataset_dir}/industry2.csv.gz",
-    "region": f"{dataset_dir}/region.csv.gz",
-    "theme": f"{dataset_dir}/theme.csv.gz",
+    "tdnet": f"{DATASET_DIR}/tdnet.csv.gz",
+    "disclosureItems": f"{DATASET_DIR}/disclosureItems.csv.gz",
+    "nikkei_article": f"{DATASET_DIR}/nikkei_article.csv.gz",
+    "article": f"{DATASET_DIR}/article.csv.gz",
+    "industry": f"{DATASET_DIR}/industry.csv.gz",
+    "industry2": f"{DATASET_DIR}/industry2.csv.gz",
+    "region": f"{DATASET_DIR}/region.csv.gz",
+    "theme": f"{DATASET_DIR}/theme.csv.gz",
     # 目的変数データ
-    "stock_labels": f"{dataset_dir}/stock_labels.csv.gz",
+    "stock_labels": f"{DATASET_DIR}/stock_labels.csv.gz",
     # 購入日指定データ
-    "purchase_date": f"{dataset_dir}/purchase_date.csv"
+    "purchase_date": f"{DATASET_DIR}/purchase_date.csv"
 }
 
-ScoringService.get_model(model_path)
-ret = ScoringService.predict(inputs, feature_service="lgbm_estimation.LGBMEstimation")
-print("\n".join(ret.split("\n")[:10]))
 
-with open(f"{output_path}/lgbm_estimation.csv", mode="w") as f:
-    f.write(ret)
+def main(args: argparse.Namespace) -> None:
+    ScoringService.get_model(MODEL_PATH)
+    ret = ScoringService.predict(INPUTS, feature_service=args.feature_service,
+                                 strategy_service=args.strategy_service)
+
+    print("\n== 出力データの確認 ==")
+    print("\n".join(ret.split("\n")[:10]))
+
+    with open(args.output_path, mode="w") as f:
+        f.write(ret)
+
+
+def get_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("output_path")
+    parser.add_argument("--feature_service", default="chapter6_tutorial.Chapter6Tutorial")
+    parser.add_argument("--strategy_service", default="strategy_trend_service.StrategyTrendService")
+    return parser
+
+
+if __name__ == "__main__":
+    parser = get_parser()
+    args = parser.parse_args()
+    main(args)
