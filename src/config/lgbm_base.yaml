@@ -1,6 +1,6 @@
 objective: "regression"
 seed: 0
-verbose: 10
+verbose: 1
 num_leaves: 10
 num_iterations: 100
 metrics: "rmse"

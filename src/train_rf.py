@@ -1,5 +1,8 @@
 import argparse
 import pathlib
+import numpy as np
+from scipy.stats import spearmanr
+from sklearn.metrics import accuracy_score
 from domain.feature.stock import Stock, StockConfig
 from domain.feature.rf_price_predictor import RFPricePredictor
 
@@ -13,9 +16,9 @@ TRAIN_START = "2016-01-04"
 # 訓練期間終了日
 TRAIN_END = "2018-12-31"
 # 評価期間開始日
-VAL_START = "2017-02-01"
+VAL_START = "2019-02-01"
 # 評価期間終了日
-VAL_END = "2017-12-01"
+VAL_END = "2019-12-01"
 # テスト期間開始日
 TEST_START = "2020-01-01"
 # 目的変数
@@ -55,12 +58,19 @@ def main(args: argparse.Namespace) -> None:
 
     stock.preprocess()
 
-    train_X, train_y, _, _, _, _ = stock.get_features_and_label(
+    train_X, train_y, val_X, val_y, _, _ = stock.get_features_and_label(
         TARGET_LABEL, TRAIN_END, VAL_START, VAL_END, TEST_START)
 
     predictor = RFPricePredictor()
     predictor.fit(train_X, train_y)
     predictor.save_model(f"{MODEL_PATH}/{args.model_filename}")
+
+    pred_y = predictor.predict(val_X)
+    spearman = spearmanr(val_y, pred_y)
+    accuracy = accuracy_score(np.sign(val_y), np.sign(pred_y))
+    print("\n=== result ===")
+    print(f"model: {args.model_filename}\nconfig_path: {args.config_path}")
+    print(f"spearman: {spearman}\naccuracy: {accuracy}")
 
 
 def get_parser() -> argparse.ArgumentParser:
