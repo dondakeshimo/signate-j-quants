@@ -46,7 +46,8 @@ class Stock(FeatureInterface):
         stock_list = self.list_df.copy()
         self._codes = stock_list[stock_list["universe_comp2"] ==
                                  True]["Local Code"].values
-        self._codes_for_train = stock_list[stock_list["prediction_target"] == True]["Local Code"].values
+        self._codes_for_train = stock_list[stock_list["prediction_target"] ==
+                                           True]["Local Code"].values
 
     def preprocess(self) -> None:
         self._set_date_index_all_df()
@@ -59,9 +60,11 @@ class Stock(FeatureInterface):
         self._df = pd.concat(buff)
         return self._df
 
-    def get_features_and_label(self, label: str, train_end: str, val_start: str, val_end: str,
-                               test_start: str) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame,
-                                                    pd.DataFrame, pd.DataFrame, pd.DataFrame):
+    def get_features_and_label(
+        self, label: str, train_end: str, val_start: str, val_end: str,
+        test_start: str
+    ) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame,
+          pd.DataFrame):
         buff = []
         for code in self._codes_for_train:
             buff.append(self._extract_feature_for_train_by_code(code))
@@ -97,9 +100,8 @@ class Stock(FeatureInterface):
             vals_y.append(_val_y)
             tests_y.append(_test_y)
 
-        return (pd.concat(trains_X), pd.concat(trains_y),
-                pd.concat(vals_X), pd.concat(vals_y),
-                pd.concat(tests_X), pd.concat(tests_y))
+        return (pd.concat(trains_X), pd.concat(trains_y), pd.concat(vals_X),
+                pd.concat(vals_y), pd.concat(tests_X), pd.concat(tests_y))
 
     @property
     def codes(self) -> List[int]:
@@ -181,7 +183,8 @@ class Stock(FeatureInterface):
 
         for i, d in enumerate(self.conf.calc_days, 1):
             price_df[f"return_{i}month"] = self._calc_return(price_df, d)
-            price_df[f"volatility_{i}month"] = self._calc_volatility(price_df, d)
+            price_df[f"volatility_{i}month"] = self._calc_volatility(
+                price_df, d)
             price_df[f"MA_gap_{i}month"] = self._calc_ma_gap(price_df, d)
 
         price_df = price_df.fillna(0)

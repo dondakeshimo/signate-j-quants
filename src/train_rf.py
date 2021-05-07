@@ -1,11 +1,12 @@
 import argparse
 import pathlib
+
 import numpy as np
 from scipy.stats import spearmanr
 from sklearn.metrics import accuracy_score
-from domain.feature.stock import Stock, StockConfig
-from domain.feature.rf_price_predictor import RFPricePredictor
 
+from domain.feature.rf_price_predictor import RFPricePredictor
+from domain.feature.stock import Stock, StockConfig
 
 DATASET_DIR = "./data"
 MODEL_PATH = "./model"

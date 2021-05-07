@@ -1,4 +1,5 @@
 import argparse
+
 from predictor import ScoringService
 
 DATASET_DIR = "./data"
@@ -26,7 +27,8 @@ INPUTS = {
 
 def main(args: argparse.Namespace) -> None:
     ScoringService.get_model(MODEL_PATH)
-    ret = ScoringService.predict(INPUTS, feature_service=args.feature_service,
+    ret = ScoringService.predict(INPUTS,
+                                 feature_service=args.feature_service,
                                  strategy_service=args.strategy_service)
 
     print("\n== 出力データの確認 ==")
@@ -39,8 +41,10 @@ def main(args: argparse.Namespace) -> None:
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("output_path")
-    parser.add_argument("--feature_service", default="chapter6_tutorial.Chapter6Tutorial")
-    parser.add_argument("--strategy_service", default="strategy_trend_service.StrategyTrendService")
+    parser.add_argument("--feature_service",
+                        default="chapter6_tutorial.Chapter6Tutorial")
+    parser.add_argument("--strategy_service",
+                        default="strategy_trend_service.StrategyTrendService")
     return parser
 
 

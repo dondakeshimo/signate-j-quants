@@ -2,8 +2,9 @@
 """
 
 import pickle
-import pandas as pd
+
 import lightgbm
+import pandas as pd
 import yaml
 
 from .price_predictor_interface import PricePredictorInterface
