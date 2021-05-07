@@ -25,8 +25,8 @@ inputs = {
 }
 
 ScoringService.get_model(model_path)
-ret = ScoringService.predict(inputs)
+ret = ScoringService.predict(inputs, feature_service="lgbm_estimation.LGBMEstimation")
 print("\n".join(ret.split("\n")[:10]))
 
-with open(f"{output_path}/chapter06-tutorial-new.csv", mode="w") as f:
+with open(f"{output_path}/lgbm_estimation.csv", mode="w") as f:
     f.write(ret)

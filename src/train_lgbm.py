@@ -1,7 +1,6 @@
 import pathlib
 from domain.feature.stock import Stock, StockConfig
 from domain.feature.lgbm_price_predictor import LGBMPricePredictor
-from domain.feature.rf_price_predictor import RFPricePredictor
 
 
 dataset_dir = "./data"
@@ -55,8 +54,6 @@ stock.preprocess()
 train_X, train_y, _, _, _, _ = stock.get_features_and_label(
     TARGET_LABEL, TRAIN_END, VAL_START, VAL_END, TEST_START)
 
-# predictor = LGBMPricePredictor()
-predictor = RFPricePredictor()
+predictor = LGBMPricePredictor()
 predictor.fit(train_X, train_y)
-# predictor.save_model(f"{model_path}/lgbm_label_high_20.pkl")
-predictor.save_model(f"{model_path}/rf_label_high_20.pkl")
+predictor.save_model(f"{model_path}/lgbm_label_high_20.pkl")
