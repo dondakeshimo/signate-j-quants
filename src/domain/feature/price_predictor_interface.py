@@ -8,6 +8,10 @@ import pandas as pd
 
 class PricePredictorInterface(ABC):
     @abstractmethod
+    def __init__(self, config_path: str = None) -> None:
+        pass
+
+    @abstractmethod
     def fit(self, train_X: pd.DataFrame) -> None:
         pass
 

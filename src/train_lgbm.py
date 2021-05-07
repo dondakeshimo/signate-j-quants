@@ -58,7 +58,7 @@ def main(args: argparse.Namespace) -> None:
     train_X, train_y, _, _, _, _ = stock.get_features_and_label(
         TARGET_LABEL, TRAIN_END, VAL_START, VAL_END, TEST_START)
 
-    predictor = LGBMPricePredictor()
+    predictor = LGBMPricePredictor(config_path=args.config_path)
     predictor.fit(train_X, train_y)
     predictor.save_model(f"{MODEL_PATH}/{args.model_filename}")
 

@@ -1,0 +1,7 @@
+objective: "regression"
+seed: 0
+verbose: 10
+num_leaves: 10
+num_iterations: 100
+metrics: "rmse"
+learning_rate: 0.1

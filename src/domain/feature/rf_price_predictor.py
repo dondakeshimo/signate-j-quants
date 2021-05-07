@@ -9,7 +9,7 @@ from .price_predictor_interface import PricePredictorInterface
 
 
 class RFPricePredictor(PricePredictorInterface):
-    def __init__(self):
+    def __init__(self, config_path: str = None):
         self.regressor = RandomForestRegressor(random_state=0)
         self.feature_columns = [
             'Result_FinancialStatement FiscalYear',
