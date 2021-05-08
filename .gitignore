@@ -136,3 +136,5 @@ data/*
 model/*
 !model/.gitkeep
 tmp/
+
+.devcontainer/
