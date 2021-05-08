@@ -52,13 +52,13 @@ $ echo "2020-12-28" >> data/purchase_date.csv
 ### GPUあり
 
 ```
-$ docker run --gpus all --rm -it -v $(pwd):/opt/ml dondakeshimo/signate-j-quants python src/main.py
+$ docker run --gpus all --rm -it -v $(pwd):/opt/ml dondakeshimo/signate-j-quants python src/main.py submission.csv
 ```
 
 ### GPUなし
 
 ```
-$ docker run --rm -it -v $(pwd):/opt/ml dondakeshimo/signate-j-quants python src/main.py
+$ docker run --rm -it -v $(pwd):/opt/ml dondakeshimo/signate-j-quants python src/main.py submission.csv
 ```
 
 ### LGBMの訓練
