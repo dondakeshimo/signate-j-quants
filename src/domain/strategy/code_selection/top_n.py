@@ -7,29 +7,13 @@ from .code_selector_interface import CodeSelectorABC, CodeSelectorRequest
 
 
 class CodeSelector(CodeSelectorABC):
-    def select(self, request: CodeSelectorRequest):
-        strategy_id = 5  # チュートリアル参照
-        code_num = 30  # 銘柄の数
-        decision_columns = ["code", "label_high_20", "label_low_20", "budget"]
-        df = request.stock_df.loc[:, decision_columns].copy()
-        # 銘柄選択方法選択
-        if strategy_id in [1, 4]:
-            # 最高値モデル + 最安値モデル
-            df.loc[:,
-                   "pred"] = df.loc[:,
-                                    "label_high_20"] + df.loc[:,
-                                                              "label_low_20"]
-        elif strategy_id in [2, 5]:
-            # 最高値モデル
-            df.loc[:, "pred"] = df.loc[:, "label_high_20"]
-        elif strategy_id in [3, 6]:
-            # 最高値モデル
-            df.loc[:, "pred"] = df.loc[:, "label_low_20"]
-        else:
-            raise ValueError("no strategy_id selected")
+    def select(
+        self, 
+        request: CodeSelectorRequest):
+        df.loc[:, "pred"] = df.loc[:, "label_high_20"]
 
-        # 特別損失を除外する場合
-        if strategy_id in [4, 5, 6]:
+        # 特別損失や決算大赤字を除外する場合
+        if heuristic == True:
             # 特別損失が発生した銘柄一覧を取得
             df_exclude = self._get_exclude(request.tdnet_df)
             # 除外用にユニークな列を作成します。
@@ -49,10 +33,12 @@ class CodeSelector(CodeSelectorABC):
                         isin(df_exclude.loc[:, "date-code_lastweek"])]
             df = df.loc[~df.loc[:, "date-code_thisweek"].
                         isin(df_exclude.loc[:, "date-code_thisweek"])]
+
         # 予測出力を降順に並び替え
         df = df.sort_values("pred", ascending=False)
         # 予測出力の大きいものを取得
         df = df.groupby("datetime").head(code_num)
+
         return df
 
     def _get_exclude(

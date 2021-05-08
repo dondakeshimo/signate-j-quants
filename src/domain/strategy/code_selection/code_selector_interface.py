@@ -11,6 +11,9 @@ import pandas as pd
 class CodeSelectorRequest:
     stock_df: pd.DataFrame
     tdnet_df: pd.DataFrame
+    nikkei_df: pd.DataFrame
+    code_num: int  #選択銘柄数
+    heuristic=False #特別損失や決算大赤字を除外する場合True 
 
 
 class CodeSelectorABC(ABC):
