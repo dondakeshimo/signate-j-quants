@@ -49,9 +49,25 @@ $ echo "2020-12-28" >> data/purchase_date.csv
 
 # 実行方法
 
+### GPUあり
+
 ```
-$ docker run --gpus all --rm -it -v $(pwd):/opt/ml dondakeshimo/signate-j-quants python src/main.py
+$ docker run --gpus all --rm -it -v $(pwd):/opt/ml dondakeshimo/signate-j-quants python src/main.py submission.csv
 ```
+
+### GPUなし
+
+```
+$ docker run --rm -it -v $(pwd):/opt/ml dondakeshimo/signate-j-quants python src/main.py submission.csv
+```
+
+### LGBMの訓練
+
+```
+$ docker run --gpus all --rm -it -v $(pwd):/opt/ml dondakeshimo/signate-j-quants python src/train_lgbm.py lgbm_label_high_20.pkl --config_path ./src/config/lgbm_base.yaml
+```
+
+### その他
 
 一応docker-composeでも立ち上げられる。
 ```
@@ -62,7 +78,7 @@ $ docker-compose up
 
 # Jupyter実行方法
 ```
-$ docker run --rm --name tutorial --shm-size=2G -v ${PWD}:/notebook -p8888:8888 --rm -it signate/runtime-jpx:2021.03 jupyter notebook --ip 0.0.0.0 --allow-root --no-browser --no-mathjax --NotebookApp.disable_check_xsrf=True --NotebookApp.token='' --NotebookApp.password='' /notebook
+$ docker run --rm --name tutorial --shm-size=2G -v ${PWD}:/notebook -p8888:8888 --rm -it dondakeshimo/signate-j-quants jupyter notebook --ip 0.0.0.0 --allow-root --no-browser --no-mathjax --NotebookApp.disable_check_xsrf=True --NotebookApp.token='' --NotebookApp.password='' /notebook
 ```
 ipynbは `ipynb` ディレクトリ配下に作成すること。
 

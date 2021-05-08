@@ -11,3 +11,4 @@ transformers==4.2.2
 yapf==0.31.0
 isort==5.8.0
 PyPortfolioOpt
+lightgbm==3.2.1
