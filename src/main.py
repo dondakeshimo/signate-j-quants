@@ -42,7 +42,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("output_path")
     parser.add_argument("--feature_service",
-                        default="chapter6_tutorial.Chapter6Tutorial")
+                        default="stock_tdnet_target.StockTdnetTarget")
     parser.add_argument(
         "--strategy_service",
         default=
