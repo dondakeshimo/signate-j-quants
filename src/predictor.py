@@ -31,7 +31,7 @@ class ScoringService(object):
             cls,
             inputs,
             feature_service="chapter6_tutorial.Chapter6Tutorial",
-            strategy_service="strategy_trend_service.StrategyTrendService"):
+            strategy_service="strategy_opt_sharpe_ratio_service.StrategyOptSharpeRatioService"):
         """Predict method
 
         Args:
@@ -47,7 +47,7 @@ class ScoringService(object):
         features_dict = feature_service.extract_feature()  # noqa: F841
 
         strategy_service = eval(
-            f"{strategy_service}(features_dict['stock'], features_dict['sentiments'],features_dict['tdnet'])"
+            f"{strategy_service}(features_dict['stock'], features_dict['sentiments'],features_dict['tdnet'], features_dict['obejective'])"
         )
         df = strategy_service.execute()
 

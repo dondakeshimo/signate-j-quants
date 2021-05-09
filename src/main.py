@@ -43,8 +43,10 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("output_path")
     parser.add_argument("--feature_service",
                         default="chapter6_tutorial.Chapter6Tutorial")
+    # parser.add_argument("--strategy_service",
+    #                     default="strategy_trend_service.StrategyTrendService")
     parser.add_argument("--strategy_service",
-                        default="strategy_trend_service.StrategyTrendService")
+                        default="strategy_opt_sharpe_ratio_service.StrategyOptSharpeRatioService")
     return parser
 
 

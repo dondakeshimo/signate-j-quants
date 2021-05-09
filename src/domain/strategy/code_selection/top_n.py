@@ -10,10 +10,13 @@ class CodeSelector(CodeSelectorABC):
     def select(
         self, 
         request: CodeSelectorRequest):
+        code_num = request.code_num  # 銘柄の数
+        decision_columns = ["code", "label_high_20"]
+        df = request.stock_df.loc[:, decision_columns].copy()
         df.loc[:, "pred"] = df.loc[:, "label_high_20"]
 
         # 特別損失や決算大赤字を除外する場合
-        if heuristic == True:
+        if request.heuristic == True:
             # 特別損失が発生した銘柄一覧を取得
             df_exclude = self._get_exclude(request.tdnet_df)
             # 除外用にユニークな列を作成します。

@@ -60,6 +60,9 @@ class Stock(FeatureInterface):
         self._df = pd.concat(buff)
         return self._df
 
+    def get_stock_labels(self) -> pd.DataFrame:
+        return self.labels_df
+
     def get_features_and_label(
         self, label: str, train_end: str, val_start: str, val_end: str,
         test_start: str
