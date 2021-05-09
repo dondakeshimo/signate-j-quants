@@ -64,11 +64,7 @@ class LGBMEstimation(FeatureService):
         tdnet_df = self.tdnet.extract_feature()
         labels_df = self.stock.get_stock_labels().copy()
 
-        return {
-            "stock": stock_df,
-            "tdnet": tdnet_df,
-            "objective": labels_df
-        }   
+        return {"stock": stock_df, "tdnet": tdnet_df, "objective": labels_df}
 
     def get_codes(self):
         return self.stock.codes

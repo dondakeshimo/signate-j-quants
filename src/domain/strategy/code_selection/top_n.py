@@ -7,9 +7,7 @@ from .code_selector_interface import CodeSelectorABC, CodeSelectorRequest
 
 
 class CodeSelector(CodeSelectorABC):
-    def select(
-        self, 
-        request: CodeSelectorRequest):
+    def select(self, request: CodeSelectorRequest):
         code_num = request.code_num  # 銘柄の数
         decision_columns = ["code", "label_high_20"]
         df = request.stock_df.loc[:, decision_columns].copy()

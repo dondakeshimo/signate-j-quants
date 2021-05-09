@@ -28,10 +28,11 @@ class ScoringService(object):
 
     @classmethod
     def predict(
-            cls,
-            inputs,
-            feature_service="chapter6_tutorial.Chapter6Tutorial", 
-            strategy_service="strategy_opt_sharpe_ratio_service.StrategyOptSharpeRatioService"):
+        cls,
+        inputs,
+        feature_service="chapter6_tutorial.Chapter6Tutorial",
+        strategy_service="strategy_opt_sharpe_ratio_service.StrategyOptSharpeRatioService"
+    ):
         """Predict method
 
         Args:

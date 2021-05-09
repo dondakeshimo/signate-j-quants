@@ -45,7 +45,6 @@ class Chapter6Tutorial(FeatureService):
         self.high_price_predictor.load_data(
             os.path.join(self.model_path, "my_model_label_high_20.pkl"))
 
-
         self.low_label = "label_low_20"
         low_price_conf = PricePredictionConfig(self.low_label)
         self.low_price_predictor = PricePredictor(low_price_conf)
@@ -65,11 +64,7 @@ class Chapter6Tutorial(FeatureService):
         tdnet_df = self.tdnet.extract_feature()
         labels_df = self.stock.get_stock_labels().copy()
 
-        return {
-            "stock": stock_df,
-            "tdnet": tdnet_df,
-            "objective": labels_df
-        }  
+        return {"stock": stock_df, "tdnet": tdnet_df, "objective": labels_df}
 
     def get_codes(self):
         return self.stock.codes
