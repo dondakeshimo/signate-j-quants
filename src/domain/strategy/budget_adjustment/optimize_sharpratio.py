@@ -56,6 +56,6 @@ class BudgetAdjustor(BudgetAdjustorABC):
             # 最適化計算時の数値誤差で1を超える場合があるので、四捨五入する。
             ceiled_ratio = np.round(portfolio[code] * digit) / digit
             stock_df.loc[stock_df["code"] == code,
-                            "budget"] += int(total_budget * ceiled_ratio)
+                         "budget"] += int(total_budget * ceiled_ratio)
         stock_df.loc[:, "budget"] = stock_df["budget"].astype(int)
         return stock_df
