@@ -16,7 +16,7 @@ from domain.feature.tdnet import Tdnet
 from .feature_service_abc import FeatureService
 
 
-class Chapter6Tutorial(FeatureService):
+class StockTdnetTarget(FeatureService):
     def __init__(self, inputs, model_path, start_dt) -> None:
         self.model_path = model_path
         inputs["model_path"] = model_path
@@ -60,10 +60,11 @@ class Chapter6Tutorial(FeatureService):
             stock_df)[self.high_label]
         stock_df[self.low_label] = self.low_price_predictor.extract_feature(
             stock_df)[self.low_label]
-        news_df = self.news.extract_feature()
-        tdnet_df = self.tdnet.extract_feature()
 
-        return {"stock": stock_df, "sentiments": news_df, "tdnet": tdnet_df}
+        tdnet_df = self.tdnet.extract_feature()
+        labels_df = self.stock.get_stock_labels().copy()
+
+        return {"stock": stock_df, "tdnet": tdnet_df, "target": labels_df}
 
     def get_codes(self):
         return self.stock.codes
