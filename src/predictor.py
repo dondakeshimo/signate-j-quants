@@ -30,7 +30,7 @@ class ScoringService(object):
     def predict(
             cls,
             inputs,
-            feature_service="chapter6_tutorial.Chapter6Tutorial",
+            feature_service="chapter6_tutorial.Chapter6Tutorial", 
             strategy_service="strategy_opt_sharpe_ratio_service.StrategyOptSharpeRatioService"):
         """Predict method
 
@@ -47,7 +47,7 @@ class ScoringService(object):
         features_dict = feature_service.extract_feature()  # noqa: F841
 
         strategy_service = eval(
-            f"{strategy_service}(features_dict['stock'], features_dict['sentiments'],features_dict['tdnet'], features_dict['obejective'])"
+            f"{strategy_service}(features_dict['stock'],features_dict['tdnet'], features_dict['objective'])"
         )
         df = strategy_service.execute()
 

@@ -13,9 +13,8 @@ from domain.strategy.code_selection.top_n import CodeSelector
 
 from .strategy_service_abc import StrategyService
 
-
 class StrategyOptSharpeRatioService(StrategyService):
-    def __init__(self, stock_df: pd.DataFrame,  sentiments_df: pd.DataFrame,
+    def __init__(self, stock_df: pd.DataFrame, 
                  tdnet_df: pd.DataFrame, labels_df: pd.DataFrame) -> None:
         self._df = None
         self.stock_df = stock_df
@@ -29,5 +28,5 @@ class StrategyOptSharpeRatioService(StrategyService):
         cs_req = CodeSelectorRequest(stock_df=self.stock_df, tdnet_df=self.tdnet_df, code_num=self.purchase_code_num)
         df = self.code_selector.select(cs_req)
 
-        ba_req = BudgetAdjustorRequest(stock_df=self.stock_df, labels_df=self.labels_df, code_num=self.purchase_code_num)
+        ba_req = BudgetAdjustorRequest(stock_df=df, labels_df=self.labels_df, code_num=self.purchase_code_num)
         return self.budget_adjustor.adjust(ba_req)
