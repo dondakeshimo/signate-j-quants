@@ -23,7 +23,7 @@ VAL_END = "2019-12-01"
 # テスト期間開始日
 TEST_START = "2020-01-01"
 # 目的変数
-TARGET_LABEL = "label_high_20"
+TARGET_LABEL = "label_high_5"
 
 INPUTS = {
     "stock_list": f"{DATASET_DIR}/stock_list.csv.gz",
