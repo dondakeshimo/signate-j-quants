@@ -1,4 +1,4 @@
-"""LightGBMを用いた価格予測モデル
+"""RandomForestを用いた価格予測モデル
 """
 
 import pickle
