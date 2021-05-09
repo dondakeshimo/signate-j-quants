@@ -1,4 +1,4 @@
-"""全然抽象化されていないけどとりあえず
+"""シャープレシオ最大化を行うstrategy
 """
 
 import pandas as pd
