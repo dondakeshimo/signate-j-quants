@@ -1,4 +1,4 @@
-"""trendのstrategy
+"""label_high_20カラムの上位N件を選択するstrategy
 """
 
 import pandas as pd
@@ -14,7 +14,7 @@ class CodeSelector(CodeSelectorABC):
         df.loc[:, "pred"] = df.loc[:, "label_high_20"]
 
         # 特別損失や決算大赤字を除外する場合
-        if request.heuristic == True:
+        if request.heuristic:
             # 特別損失が発生した銘柄一覧を取得
             df_exclude = self._get_exclude(request.tdnet_df)
             # 除外用にユニークな列を作成します。
