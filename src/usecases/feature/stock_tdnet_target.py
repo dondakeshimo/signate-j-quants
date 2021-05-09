@@ -32,10 +32,6 @@ class StockTdnetTarget(FeatureService):
         self.stock = Stock(stock_config)
         self.stock.load_data(inputs)
 
-        news_config = NewsConfig(start_dt, "2020-09-25", ["headline"])
-        self.news = News(news_config)
-        self.news.load_data(inputs)
-
         self.tdnet = Tdnet()
         self.tdnet.load_data(inputs)
 
