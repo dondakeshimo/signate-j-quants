@@ -28,10 +28,11 @@ class ScoringService(object):
 
     @classmethod
     def predict(
-            cls,
-            inputs,
-            feature_service="chapter6_tutorial.Chapter6Tutorial",
-            strategy_service="strategy_trend_service.StrategyTrendService"):
+        cls,
+        inputs,
+        feature_service="stock_tdnet_target.StockTdnetTarget",
+        strategy_service="strategy_opt_sharpe_ratio_service.StrategyOptSharpeRatioService"
+    ):
         """Predict method
 
         Args:
@@ -47,7 +48,7 @@ class ScoringService(object):
         features_dict = feature_service.extract_feature()  # noqa: F841
 
         strategy_service = eval(
-            f"{strategy_service}(features_dict['stock'], features_dict['sentiments'],features_dict['tdnet'])"
+            f"{strategy_service}(features_dict['stock'],features_dict['tdnet'], features_dict['target'])"
         )
         df = strategy_service.execute()
 
